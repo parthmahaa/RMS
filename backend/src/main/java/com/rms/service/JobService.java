@@ -32,21 +32,24 @@ public class JobService {
     private final UserRepo userRepository;
     private final ModelMapper modelMapper;
     private final UserService userService;
+    private final RecruiterRepository recruiterRepository;
 
     @Transactional
     public JobDTO createJob(CreateJobDto dto) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        UserEntity recruiter = userRepository.findByEmail(email)
+        UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        if (!recruiter.getRoles().contains(RoleType.RECRUITER)) {
+        if (!user.getRoles().contains(RoleType.RECRUITER)) {
             throw new RuntimeException("Only recruiters can create jobs");
         }
 
-        userService.validateUserCompany(recruiter);
+        userService.validateCompanyInfo(user);
 
         Company company = companyRepository.findById(dto.getCompanyId())
                 .orElseThrow(() -> new RuntimeException("Company not found"));
 
+        Recruiter recruiter = recruiterRepository.findByUserId(user.getId())
+                .orElseThrow(()-> new IllegalStateException("Recruiter not found"));
         //validate if skills exists
         if (dto.getSkillRequirementIds() != null) {
             for (Long skillId : dto.getSkillRequirementIds()) {
@@ -94,7 +97,7 @@ public class JobService {
             throw new RuntimeException("Only recruiters can update jobs");
         }
 
-        userService.validateUserCompany(user);
+        userService.validateCompanyInfo(user);
 
         modelMapper.map(dto, job);
 

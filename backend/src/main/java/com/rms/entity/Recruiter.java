@@ -2,31 +2,35 @@ package com.rms.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.List;
 
 @Entity
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@SuperBuilder
-@Data
-@DiscriminatorValue("RECRUITER")
-public class Recruiter extends UserEntity{
+@Builder
+@Table(name = "tbl_recruiters")
+public class Recruiter{
 
-    @ManyToOne
-    @JoinColumn(name = "company_id", nullable = false)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    private UserEntity user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id", nullable = true)
     private Company company;
 
     @OneToMany(mappedBy = "createdBy" , cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Job> createdJobs;
 
-    @Override
     @Transient
     public boolean isProfileComplete() {
         if (this.getCompany() == null) {

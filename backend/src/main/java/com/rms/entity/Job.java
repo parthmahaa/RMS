@@ -48,7 +48,7 @@ public class Job {
 
     @ManyToOne
     @JoinColumn(name = "created_by_user_id", nullable = false)
-    private UserEntity createdBy;
+    private Recruiter createdBy;
 
     @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<JobSkillRequirement> skillRequirements = new ArrayList<>();

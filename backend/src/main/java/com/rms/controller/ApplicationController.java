@@ -22,9 +22,9 @@ public class ApplicationController {
 
     @PostMapping
     @PreAuthorize("hasRole('CANDIDATE')")
-    public ResponseEntity<ApiResponse<JobApplicationDto>> applyToJob(@RequestParam Long jobId, @RequestParam Long candidateId) {
+    public ResponseEntity<ApiResponse<JobApplicationDto>> applyToJob(@RequestParam Long jobId) {
         try {
-            JobApplicationDto dto = applicationService.applyToJob(jobId, candidateId);
+            JobApplicationDto dto = applicationService.applyToJob(jobId);
             return ResponseEntity.ok(ApiResponse.<JobApplicationDto>builder()
                     .status(HttpStatus.OK.value())
                     .message("Application submitted successfully")
@@ -62,11 +62,11 @@ public class ApplicationController {
         }
     }
 
-    @GetMapping("/candidate/{candidateId}")
+    @GetMapping("/candidate")
     @PreAuthorize("hasRole('CANDIDATE')")
-    public ResponseEntity<ApiResponse<List<JobApplicationDto>>> getApplicationsByCandidate(@PathVariable Long candidateId) {
+    public ResponseEntity<ApiResponse<List<JobApplicationDto>>> getApplicationsByCandidate() {
         try {
-            List<JobApplicationDto> apps = applicationService.getApplicationsByCandidate(candidateId);
+            List<JobApplicationDto> apps = applicationService.getMyApplications();
             return ResponseEntity.ok(ApiResponse.<List<JobApplicationDto>>builder()
                     .status(HttpStatus.OK.value())
                     .message("Candidate applications fetched successfully")

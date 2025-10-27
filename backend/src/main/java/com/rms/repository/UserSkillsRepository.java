@@ -12,10 +12,10 @@ import java.util.Optional;
 
 @Repository
 public interface UserSkillsRepository extends JpaRepository<UserSkills,Long> {
-    List<UserSkills> findByUserId(Long userId);
+    List<UserSkills> findByCandidateId(Long candidateId);
 
     @Modifying
-    @Query("DELETE FROM UserSkills us WHERE us.user.id = :userId")
-    void deleteByUserId(@Param("userId") Long userId);
+    @Query("DELETE FROM UserSkills us WHERE us.candidate.id = :candidateId")
+    void deleteByCandidateId(@Param("candidateId") Long candidateId);
 
 }

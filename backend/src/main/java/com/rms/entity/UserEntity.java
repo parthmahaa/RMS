@@ -20,9 +20,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "tbl_users")
-@SuperBuilder
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "user_type", discriminatorType = DiscriminatorType.STRING)
+@Builder
 public class UserEntity  implements UserDetails  {
 
     @Id
@@ -39,11 +37,8 @@ public class UserEntity  implements UserDetails  {
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
+    @Column(name = "role")
     Set<RoleType> roles = new HashSet<>();
-
-    @ManyToOne
-    @JoinColumn(name = "company_id")
-    private Company company;
 
     private Date createdAt;
 

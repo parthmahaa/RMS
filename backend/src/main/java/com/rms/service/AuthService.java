@@ -4,7 +4,9 @@ package com.rms.service;
 import com.rms.dto.auth.*;
 import com.rms.constants.RoleType;
 import com.rms.entity.*;
+import com.rms.repository.CandidateRepository;
 import com.rms.repository.CompanyRepository;
+import com.rms.repository.RecruiterRepository;
 import com.rms.repository.UserRepo;
 import com.rms.security.AuthUtil;
 import jakarta.transaction.Transactional;
@@ -16,6 +18,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.management.relation.Role;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -29,6 +32,8 @@ public class AuthService {
     private final EmailService emailService;
     private final AuthenticationManager authenticationManager;
     private final AuthUtil authUtil;
+    private final CandidateRepository candidateRepository;
+    private final RecruiterRepository recruiterRepository;
     private final PasswordEncoder passwordEncoder;
 
     public AuthResponseDTO login(LoginRequestDTO dto) {
@@ -48,8 +53,10 @@ public class AuthService {
             throw new BadCredentialsException("Account is not verified. A new OTP has been sent to your email.");
         }
 
+        boolean isProfileComplete = getProfileStatus(user);
+
         String token = authUtil.generateAccessToken(user);
-        return new AuthResponseDTO(token, user.getId(), user.getName(), user.getEmail(), user.getRoles(), user.isProfileComplete());
+        return new AuthResponseDTO(token, user.getId(), user.getName(), user.getEmail(), user.getRoles(), isProfileComplete);
     }
 
     @Transactional
@@ -57,23 +64,36 @@ public class AuthService {
         if (userRepo.findByEmail(dto.getEmail()).isPresent()) {
             throw new IllegalArgumentException("Email is already in use.");
         }
-        UserEntity user;
+
         Set<RoleType> roles = new HashSet<>();
         String requestedRole = dto.getRole().toUpperCase();
+        String otp = generateOtp();
+
+        // Create Base user
+        UserEntity user = UserEntity.builder()
+                .email(dto.getEmail())
+                .password(passwordEncoder.encode(dto.getPassword()))
+                .name(dto.getName())
+                .createdAt(new Date())
+                .isVerified(false)
+                .otp(otp)
+                .otpGeneratedTime(LocalDateTime.now())
+                .build();
 
         if (RoleType.CANDIDATE.name().equals(requestedRole)) {
             roles.add(RoleType.CANDIDATE);
-            user = Candidate.builder()
-                    .email(dto.getEmail())
-                    .password(passwordEncoder.encode(dto.getPassword()))
-                    .name(dto.getName())
-                    .roles(roles)
-                    .createdAt(new Date())
-                    .isVerified(false)
+            user.setRoles(roles);
+
+            UserEntity savedUser = userRepo.save(user);
+
+            Candidate candidate = Candidate.builder()
+                    .user(savedUser)
+                    .applications(null)
                     .profileCompleted(false)
                     .summary("")
                     .phone(dto.getPhone())
                     .location(null)
+                    .userSkills(null)
                     .totalExperience(null)
                     .graduationYear(null)
                     .collegeName(null)
@@ -82,8 +102,12 @@ public class AuthService {
                     .currentCompany(null)
                     .build();
 
+            candidateRepository.save(candidate);
+
         } else if (RoleType.RECRUITER.name().equals(requestedRole)) {
             roles.add(RoleType.RECRUITER);
+            user.setRoles(roles);
+
             String emailDomain;
             try {
                 emailDomain = dto.getEmail().split("@")[1];
@@ -91,33 +115,24 @@ public class AuthService {
                 throw new IllegalArgumentException("Invalid email address format.");
             }
 
-            Company company = companyRepository.findByWebsiteContaining(emailDomain)
-                    .orElseThrow(() -> {
-                        return new IllegalArgumentException(
-                                "Your company is not registered for domain '" + emailDomain + "'. " +
-                                        "Please contact an admin to register your company."
-                        );
-                    });
+//            Company company = companyRepository.findByWebsiteContaining(emailDomain)
+//                    .orElseThrow(() -> new IllegalArgumentException(
+//                            "Your company is not registered for domain '" + emailDomain + "'. " +
+//                                    "Please contact an admin to register your company."
+//                    ));
 
-            user = Recruiter.builder()
-                    .email(dto.getEmail())
-                    .password(passwordEncoder.encode(dto.getPassword()))
-                    .name(dto.getName())
-                    .roles(roles)
-                    .company(company) // Link company
-                    .createdAt(new Date())
-                    .isVerified(false)
+            UserEntity savedUser = userRepo.save(user);
+
+            Recruiter recruiter = Recruiter.builder()
+                    .user(savedUser)
+                    .company(null)
                     .build();
+
+            recruiterRepository.save(recruiter);
 
         } else {
             throw new IllegalArgumentException("Invalid role specified. Please choose CANDIDATE or RECRUITER.");
         }
-
-        String otp = generateOtp();
-        user.setOtp(otp);
-        user.setOtpGeneratedTime(LocalDateTime.now());
-
-        UserEntity savedUser = userRepo.save(user);
 
         emailService.sendOtpAsync(user.getEmail(), otp, user.getName());
         return "Registration successful. Please check your email for an OTP to verify your account.";
@@ -144,14 +159,12 @@ public class AuthService {
         user.setOtp(null);
         user.setOtpGeneratedTime(null);
 
-        if (user instanceof Candidate) {
-            ((Candidate) user).setProfileCompleted(user.isProfileComplete());
-        }
+        boolean isProfileComplete = getProfileStatus(user);
 
         userRepo.save(user);
 
         String token = authUtil.generateAccessToken(user);
-        return new AuthResponseDTO(token, user.getId(), user.getName(), user.getEmail(), user.getRoles(), user.isProfileComplete());
+        return new AuthResponseDTO(token, user.getId(), user.getName(), user.getEmail(), user.getRoles(), isProfileComplete);
     }
 
     @Transactional
@@ -179,6 +192,20 @@ public class AuthService {
         UserEntity user = userRepo.findByEmail(username).orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         return new LoginResponseDTO(token, user.getId(), user.getEmail(), user.getRoles());
+    }
+
+    private boolean getProfileStatus(UserEntity user){
+        if(user.getRoles().contains(RoleType.CANDIDATE)){
+            return candidateRepository.findByUserId(user.getId())
+                    .map(Candidate :: isProfileComplete)
+                    .orElse(false);
+        }else if(user.getRoles().contains(RoleType.RECRUITER)){
+            return recruiterRepository.findByUserId(user.getId())
+                    .map(Recruiter::isProfileComplete)
+                    .orElse(false);
+        }
+
+        return true;
     }
 
     private String generateOtp() {

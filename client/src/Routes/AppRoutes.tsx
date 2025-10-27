@@ -11,7 +11,14 @@ import Navbar from '../Components/layout/Navbar'
 const AppRoutes: React.FC = () => {
     return (
         <Routes>
-            <Route path="/" element={<Home />} />
+            <Route
+                path="/"
+                element={
+                    <ProtectedRoute>
+                        <Dashboard />
+                    </ProtectedRoute>
+                }
+            />
 
             <Route
                 path='/login'
@@ -26,7 +33,7 @@ const AppRoutes: React.FC = () => {
                 path='/register'
                 element={
                     <PublicRoute>
-                        <RegisterForm/>
+                        <RegisterForm />
                     </PublicRoute>
                 }
             />
@@ -39,12 +46,12 @@ const AppRoutes: React.FC = () => {
                     </ProtectedRoute>
                 }
             />
-            <Route 
+            <Route
                 path='/profile'
                 element={
                     <ProtectedRoute>
-                        <Navbar/>
-                        <Profile/>
+                        <Navbar />
+                        <Profile />
                     </ProtectedRoute>
                 }
             />

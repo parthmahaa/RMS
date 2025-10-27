@@ -6,11 +6,12 @@ import com.rms.dto.skills.CreateSkillDto;
 import com.rms.dto.skills.ProposedSkillDto;
 import com.rms.dto.skills.ProposedSkillUpdateDto;
 import com.rms.dto.skills.SkillDto;
-import com.rms.entity.Company;
 import com.rms.entity.ProposedSkill;
+import com.rms.entity.Recruiter; // MODIFIED: Import Recruiter
 import com.rms.entity.Skill;
 import com.rms.entity.UserEntity;
 import com.rms.repository.ProposedSkillRepository;
+import com.rms.repository.RecruiterRepository; // MODIFIED: Import RecruiterRepository
 import com.rms.repository.SkillRepository;
 import com.rms.repository.UserRepo;
 import jakarta.transaction.Transactional;
@@ -32,6 +33,9 @@ public class SkillService {
     private final ModelMapper modelMapper;
     private final UserService userService;
 
+    // MODIFIED: Inject RecruiterRepository
+    private final RecruiterRepository recruiterRepository;
+
     @Transactional
     public ProposedSkillDto proposeSkill(CreateSkillDto dto) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -41,7 +45,9 @@ public class SkillService {
             throw new RuntimeException("Only recruiters can propose skills");
         }
 
-        userService.validateUserCompany(user);
+        // This call is still valid, as UserService.validateUserCompany
+        // was updated to handle the new UserEntity -> Recruiter logic
+        userService.validateCompanyInfo(user);
 
         // Check if skill already exists
         if (skillRepository.findByNameIgnoreCase(dto.getName()).isPresent()) {
@@ -49,14 +55,20 @@ public class SkillService {
         }
 
         // Check if already proposed
+        // This logic is fine as ProposedSkill links to UserEntity ID
         if (proposedSkillRepository.findByProposedByIdAndStatus(user.getId(), ProposalStatus.PENDING)
                 .stream().anyMatch(ps -> ps.getName().equalsIgnoreCase(dto.getName()))) {
             throw new RuntimeException("Skill already proposed by you");
         }
 
+        // MODIFIED: Get Recruiter entity to find company name
+        Recruiter recruiter = recruiterRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new IllegalStateException("Recruiter profile not found for user"));
+
         ProposedSkill proposedSkill = modelMapper.map(dto, ProposedSkill.class);
         proposedSkill.setProposedBy(user);
-        proposedSkill.setCompanyName(user.getCompany().getName());
+        // MODIFIED: Get company name from Recruiter entity
+        proposedSkill.setCompanyName(recruiter.getCompany().getName());
         proposedSkill.setStatus(ProposalStatus.PENDING);
         proposedSkill = proposedSkillRepository.save(proposedSkill);
         return mapToProposedSkillDto(proposedSkill);
@@ -65,17 +77,16 @@ public class SkillService {
     // Admin creates a skill directly
     @Transactional
     public SkillDto createSkill(SkillDto dto) {
+        // ... (No changes needed for ADMIN-only logic) ...
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         UserEntity admin = userRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         if (!admin.getRoles().contains(RoleType.ADMIN)) {
             throw new RuntimeException("Only admins can create skills");
         }
-
         if (skillRepository.findByNameIgnoreCase(dto.getName()).isPresent()) {
             throw new RuntimeException("Skill already exists");
         }
-
         Skill skill = modelMapper.map(dto, Skill.class);
         skill = skillRepository.save(skill);
         return mapToSkillDto(skill);
@@ -84,62 +95,54 @@ public class SkillService {
     // Admin approves a proposal (adds to master Skill)
     @Transactional
     public ProposedSkillDto approveProposal(Long proposalId) {
+        // ... (No changes needed for ADMIN-only logic) ...
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         UserEntity admin = userRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         if (!admin.getRoles().contains(RoleType.ADMIN)) {
             throw new RuntimeException("Only admins can approve proposals");
         }
-
         ProposedSkill proposal = proposedSkillRepository.findById(proposalId)
                 .orElseThrow(() -> new RuntimeException("Proposal not found"));
-
         if (!ProposalStatus.PENDING.equals(proposal.getStatus())) {
             throw new RuntimeException("Proposal is not pending");
         }
-
-        // Create master skill
         Skill newSkill = Skill.builder()
                 .name(proposal.getName())
                 .build();
         skillRepository.save(newSkill);
-
         proposal.setStatus(ProposalStatus.APPROVED);
         proposedSkillRepository.save(proposal);
-
         return mapToProposedSkillDto(proposal);
     }
 
     // Admin rejects a proposal
     @Transactional
     public ProposedSkillDto rejectProposal(Long proposalId, ProposedSkillUpdateDto dto) {
+        // ... (No changes needed for ADMIN-only logic) ...
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         UserEntity admin = userRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         if (!admin.getRoles().contains(RoleType.ADMIN)) {
             throw new RuntimeException("Only admins can reject proposals");
         }
-
         ProposedSkill proposal = proposedSkillRepository.findById(proposalId)
                 .orElseThrow(() -> new RuntimeException("Proposal not found"));
-
         if (!ProposalStatus.PENDING.equals(proposal.getStatus())) {
             throw new RuntimeException("Proposal is not pending");
         }
-
         if (dto.getStatus() != ProposalStatus.REJECTED || dto.getRejectionReason() == null || dto.getRejectionReason().trim().isEmpty()) {
             throw new RuntimeException("Rejection requires a reason");
         }
-
         proposal.setStatus(ProposalStatus.REJECTED);
         proposal.setRejectionReason(dto.getRejectionReason());
         proposedSkillRepository.save(proposal);
-
         return mapToProposedSkillDto(proposal);
     }
 
     // Get all skills (for job creation)
     public List<SkillDto> getAllSkills() {
+        // ... (No changes needed) ...
         return skillRepository.findAllByOrderByName().stream()
                 .map(this::mapToSkillDto)
                 .collect(Collectors.toList());
@@ -147,6 +150,7 @@ public class SkillService {
 
     // Get pending proposals (admin view)
     public List<ProposedSkillDto> getPendingProposals() {
+        // ... (No changes needed) ...
         return proposedSkillRepository.findByStatus(ProposalStatus.PENDING).stream()
                 .map(this::mapToProposedSkillDto)
                 .collect(Collectors.toList());
@@ -154,6 +158,7 @@ public class SkillService {
 
     // Get proposals by user (recruiter view)
     public List<ProposedSkillDto> getMyProposals() {
+        // ... (No changes needed, uses UserEntity ID) ...
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         UserEntity user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));

@@ -2,11 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Loader2, CheckCircle, XCircle, Building, User } from 'lucide-react'; // Added User icon
 import api from '../utils/api'; 
-import { useProfileCompletion } from '../Hooks/useProfileCompletion'; 
 import Button from '../Components/ui/Button'; 
 import { Input } from '../Components/ui/Input';   
 import { Textarea } from '../Components/ui/Textarea'; 
-import useAuthStore from '../Store/authStore'; 
 import {
   Select,
   SelectTrigger,
@@ -14,6 +12,7 @@ import {
   SelectContent,
   SelectItem,
 } from '../Components/ui/Select';
+import {useProfileCompletion} from '../Hooks/useProfileCompletion'
 
 // --- DTO Interfaces ---
 interface UserSkillDto {
@@ -78,11 +77,9 @@ const Profile: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [skillMasterOptions, setSkillMasterOptions] = useState<MasterSkillOption[]>([]); 
-
   const isCandidate = profile?.role.includes('CANDIDATE');
   const isRecruiter = profile?.role.includes('RECRUITER');
-
-  const isProfileComplete = profile?.profileCompleted;
+  const {isProfileComplete,refreshProfileStatus} = useProfileCompletion();
 
   const fetchProfile = useCallback(async () => {
     setIsLoading(true);
@@ -94,6 +91,7 @@ const Profile: React.FC = () => {
        if (profileData.role.includes('CANDIDATE')) {
           const candidateData = profileData as CandidateProfileDto;
           setFormData({
+              id : candidateData.id,
               summary: candidateData.summary || '',
               phone: candidateData.phone || '',
               location: candidateData.location || '',
@@ -227,7 +225,6 @@ useEffect(() => {
       const updatedProfileData = response.data.data;
       setProfile(updatedProfileData);
       
-      // Re-initialize form data correctly after update
       if (updatedProfileData.role.includes('CANDIDATE')) {
           const candidateData = updatedProfileData as CandidateProfileDto;
            setFormData({
@@ -248,14 +245,14 @@ useEffect(() => {
       } else if (updatedProfileData.role.includes('RECRUITER')) {
             const recruiterData = updatedProfileData as RecruiterProfileDto;
             setFormData({
-                company: { ...(recruiterData.company || {}) } // Handle null company
+                company: { ...(recruiterData.company || {}) } // Ha ndle null company
             });
        }
 
 
       setIsEditing(false);
       toast.success(response.data.message || 'Profile updated successfully!');
-
+      refreshProfileStatus();
     } catch (error: any) {
       console.error("Update Profile Error:", error);
       toast.error(error.response?.data?.message || 'Failed to update profile.');

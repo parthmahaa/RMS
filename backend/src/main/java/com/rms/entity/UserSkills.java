@@ -2,18 +2,16 @@ package com.rms.entity;
 
 import com.rms.constants.SkillType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Table(name = "tbl_user_skills",uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"user_id", "skill_id"})
+        @UniqueConstraint(columnNames = {"candidate_id", "skill_id"})
 })
 public class UserSkills {
 
@@ -21,12 +19,16 @@ public class UserSkills {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "user_id")
-    private UserEntity user;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "candidate_id", nullable = false)
+    private Candidate candidate;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "skill_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "skill_id", nullable = false)
     private Skill skill;
 
+    public UserSkills(Candidate candidate, Skill skill) {
+        this.candidate = candidate;
+        this.skill = skill;
+    }
 }
