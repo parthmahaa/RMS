@@ -1,4 +1,4 @@
-package com.rms.dto;
+package com.rms.dto.auth;
 
 import com.rms.constants.RoleType;
 import lombok.AllArgsConstructor;
@@ -8,12 +8,13 @@ import lombok.NoArgsConstructor;
 import java.util.Set;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class SignupRequestDTO {
+@AllArgsConstructor
+public class AuthResponseDTO {
+    private String token;
+    private Long userId;
     private String name;
     private String email;
-    private String password;
-    private String phone;
-    private String roles;
+    private Set<RoleType> roles;
+    private boolean isProfileComplete;
 }

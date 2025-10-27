@@ -1,4 +1,4 @@
-package com.rms.dto;
+package com.rms.dto.auth;
 import com.rms.constants.RoleType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,7 +12,7 @@ import java.util.Set;
 public class SignupResponseDTO {
 
     private String token;
-    private Integer userId;
+    private Long userId;
     private String name;
     private String email;
     private Set<RoleType> roles;

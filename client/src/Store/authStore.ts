@@ -22,6 +22,7 @@ const useAuthStore = create<AuthState>((set) => ({
   roles: [],
 
   login: (email: string, userId: string, roles: string[], token: string) => {
+    localStorage.setItem('token', token);
     set({
       userId,
       token,
@@ -35,7 +36,7 @@ const useAuthStore = create<AuthState>((set) => ({
   logout: () => {
     localStorage.removeItem('token');
     set({
-      userId: null,
+      userId: null, 
       token: null,
       isLoading: false,
       roles: [],

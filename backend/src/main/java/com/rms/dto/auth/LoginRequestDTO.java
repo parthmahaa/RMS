@@ -1,4 +1,4 @@
-package com.rms.dto;
+package com.rms.dto.auth;
 
 import lombok.Data;
 

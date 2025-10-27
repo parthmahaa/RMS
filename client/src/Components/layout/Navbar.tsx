@@ -43,58 +43,6 @@ export default function Navbar() {
             RMS
           </Link>
 
-          {/* Desktop Navigation */}
-          {/* <ul className="flex space-x-8 items-center">
-            <li>
-              <NavLink
-                to="/"
-                className={({ isActive }) =>
-                  `block py-2 duration-200 ${
-                    isActive ? "text-orange-700" : "text-gray-700"
-                  } hover:text-orange-700`
-                }
-              >
-                Home
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/explore"
-                className={({ isActive }) =>
-                  `block py-2 duration-200 ${
-                    isActive ? "text-orange-700" : "text-gray-700"
-                  } hover:text-orange-700`
-                }
-              >
-                Explore
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/reviews"
-                className={({ isActive }) =>
-                  `block py-2 duration-200 ${
-                    isActive ? "text-orange-700" : "text-gray-700"
-                  } hover:text-orange-700`
-                }
-              >
-                Reviews
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/plan-your-trip"
-                className={({ isActive }) =>
-                  `block py-2 duration-200 ${
-                    isActive ? "text-orange-700" : "text-gray-700"
-                  } hover:text-orange-700`
-                }
-              >
-                Trips
-              </NavLink>
-            </li>
-          </ul> */}
-
           {/* Right Side Icons */}
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (

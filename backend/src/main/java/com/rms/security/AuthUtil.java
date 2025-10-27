@@ -29,9 +29,8 @@ public class AuthUtil {
                 .subject(user.getEmail())
                 .claim("userId", userId)
                 .claim("role", user.getRoles())
-                .claim("email" , user.getEmail())
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 10))
+                .expiration(new Date(System.currentTimeMillis() +1000L * 60 * 60 * 24 * 10))
                 .signWith(getSecretKey())
                 .compact();
     }

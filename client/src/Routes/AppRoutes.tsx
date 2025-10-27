@@ -5,6 +5,8 @@ import Home from '../Pages/Home'
 import Dashboard from '../Pages/Dashboard'
 import RegisterForm from '../Pages/Register'
 import LoginForm from '../Pages/Login'
+import Profile from '../Pages/Profile'
+import Navbar from '../Components/layout/Navbar'
 
 const AppRoutes: React.FC = () => {
     return (
@@ -37,7 +39,15 @@ const AppRoutes: React.FC = () => {
                     </ProtectedRoute>
                 }
             />
-            
+            <Route 
+                path='/profile'
+                element={
+                    <ProtectedRoute>
+                        <Navbar/>
+                        <Profile/>
+                    </ProtectedRoute>
+                }
+            />
             <Route path='*' element={<div className='text-center pt-20'>Page Not Found</div>} />
         </Routes>
 
