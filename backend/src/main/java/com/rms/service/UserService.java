@@ -120,7 +120,6 @@ public class UserService {
 
             Company savedCompany = companyRepository.save(companyToUpdate);
 
-            // Link to recruiter if not already linked
             if (recruiter.getCompany() == null || !recruiter.getCompany().getId().equals(savedCompany.getId())) {
                 recruiter.setCompany(savedCompany);
             }

@@ -34,7 +34,6 @@ public class ApplicationService {
     private final ModelMapper modelMapper;
 
     @Transactional
-    // MODIFIED: Removed candidateId parameter
     public JobApplicationDto applyToJob(Long jobId) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         UserEntity user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
@@ -47,7 +46,6 @@ public class ApplicationService {
             throw new RuntimeException("Job is not open");
         }
 
-        // MODIFIED: Fetch Candidate profile from the authenticated UserEntity
         Candidate candidate = candidateRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new RuntimeException("Candidate profile not found."));
 
@@ -55,7 +53,6 @@ public class ApplicationService {
             throw new RuntimeException("Profile must be completed before applying. Please update via /api/candidate/profile.");
         }
 
-        // MODIFIED: Check using the fetched candidate's ID
         if (applicationRepository.findByJobIdAndCandidateId(jobId, candidate.getId()).isPresent()) {
             throw new RuntimeException("Already applied");
         }
@@ -68,7 +65,6 @@ public class ApplicationService {
 
         application = applicationRepository.save(application);
 
-        // This logic remains correct
         job.getApplications().add(application);
         candidate.getApplications().add(application);
         jobRepository.save(job);
@@ -84,20 +80,16 @@ public class ApplicationService {
                 .collect(Collectors.toList());
     }
 
-    // MODIFIED: Renamed to getMyApplications and removed parameter
     public List<JobApplicationDto> getMyApplications() {
-        // MODIFIED: Get authenticated user
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         UserEntity user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
         if (!user.getRoles().contains(RoleType.CANDIDATE)) {
             throw new RuntimeException("Only candidates can view their applications");
         }
 
-        // MODIFIED: Fetch candidate profile
         Candidate candidate = candidateRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new RuntimeException("Candidate profile not found."));
 
-        // MODIFIED: Find applications using the fetched candidate's ID
         return applicationRepository.findByCandidateId(candidate.getId()).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
@@ -106,7 +98,6 @@ public class ApplicationService {
     @Transactional
     public JobApplicationDto updateApplicationStatus(Long applicationId, ApplicationStatusUpdateDto dto) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        // MODIFIED: Renamed variable for clarity
         UserEntity recruiterUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -119,8 +110,6 @@ public class ApplicationService {
 
         Job job = application.getJob();
 
-        // This logic is correct: it checks the UserEntity ID of the job creator
-        // against the UserEntity ID of the person updating the status.
         if (!job.getCreatedBy().getId().equals(recruiterUser.getId())) {
             throw new RuntimeException("You are not authorized to update this application");
         }
