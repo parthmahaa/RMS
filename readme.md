@@ -1,5 +1,6 @@
 ## ISSUES 
-    1. The skills for candidates are not being updated properly. Redundant skills are being saved. Will fix before the next commit
+    1. The skills for candidates are not being updated properly. Redundant skills are being saved.
+    Will fix before the next commit
 
 ## Updates 
     1. Improved authentication flow with OTP verification
