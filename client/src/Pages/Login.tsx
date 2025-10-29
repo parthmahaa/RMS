@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import useAuthStore from "../Store/authStore";
 import { toast } from "sonner";
 import Button from "../Components/ui/Button";
-import { Input } from "../Components/ui/Input";
+import Input  from "../Components/ui/Input";
 import api from "../utils/api";
 import {OtpVerificationDialog} from "../Components/ui/OtpVerification";
 
@@ -33,7 +33,7 @@ const LoginForm = () => {
 
           navigate("/dashboard");
       } else {
-        throw new Error("Login failed. Unexpected response from server.");
+        throw new Error("Login failed.");
       }
     } catch (error: any) {
       console.error('Login error:', error);
@@ -68,13 +68,12 @@ const LoginForm = () => {
                   Email address
                 </label>
                 <Input
-                  type="email"
+                  id="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
                   required
                   placeholder="Enter your email"
-                  className="focus:ring-gray-500 focus:border-gray-500" 
                 />
               </div>
               <div>
@@ -82,24 +81,25 @@ const LoginForm = () => {
                   Password
                 </label>
                 <Input
-                  type="password"
+                  id="password"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
                   required
                   placeholder="Enter your password"
-                  className="focus:ring-gray-500 focus:border-gray-500" 
                 />
               </div>
             </div>
 
             <div>
               <Button
+                id="sign_in"
                 type="submit"
                 disabled={loading}
                 className="w-full"
                 loading={loading}
-                variant="primary" 
+                variant="contained" 
+                sx={{backgroundColor: "black"}}
               >
                 Sign In
               </Button>

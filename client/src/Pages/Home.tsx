@@ -1,14 +1,10 @@
 import React from 'react'
-import Navbar from '../Components/layout/Navbar'
 
 function Home() {
   return (
-    <>
-        <Navbar/>
-        <div className='text-center'>
-            This is the Home page
-        </div>
-    </>
+    <div className='text-center p-8'>
+        This is the Home page
+    </div>
   )
 }
 

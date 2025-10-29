@@ -5,7 +5,7 @@ import api from "../../utils/api";
 import useAuthStore from "../../Store/authStore";
 import Button from "../../Components/ui/Button"; 
 import { Loader2 } from "lucide-react";
-import { Input } from "../../Components/ui/Input";
+import Input  from "../../Components/ui/Input";
 
 interface OtpVerificationDialogProps {
   email: string;
@@ -77,31 +77,33 @@ export const OtpVerificationDialog: React.FC<OtpVerificationDialogProps> = ({ em
               Verification Code
             </label>
             <Input
+              id="otp"
               type="text"
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
               placeholder="Enter 6-digit OTP"
-              maxLength={6}
               className="text-center text-lg tracking-[0.5em]"
             />
           </div>
           
           <Button
+            id="submit"
             onClick={handleVerify}
             loading={loading}
             disabled={loading || otp.length !== 6}
             className="w-full"
-            variant="primary"
+            variant="contained"
           >
             Verify Account
           </Button>
 
           <div className="text-sm text-center">
             <Button
+            id="resend"
               onClick={handleResend}
               disabled={resendLoading}
-              variant="outline"
-              size="sm"
+              variant="outlined"
+              size="small"
               className="border-none shadow-none text-gray-600 hover:text-black"
             >
               {resendLoading ? (
@@ -115,9 +117,10 @@ export const OtpVerificationDialog: React.FC<OtpVerificationDialogProps> = ({ em
 
         <div className="mt-4 text-center">
             <Button
+              id="cancel"
               onClick={onClose}
-              variant="outline"
-              size="sm"
+              variant="contained"
+              size="small"
               className="border-none text-red-600 hover:bg-red-50"
             >
               Cancel

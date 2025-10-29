@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import Button from "../Components/ui/Button"; 
-import { Input } from "../Components/ui/Input"; 
+import  Input from "../Components/ui/Input"; 
 import api from "../utils/api"; 
 import { OtpVerificationDialog } from "../Components/ui/OtpVerification";
 import { User, Briefcase } from "lucide-react";
@@ -119,13 +119,12 @@ const RegisterForm = () => {
                   Full Name
                 </label>
                 <Input
-                  type="text"
+                  id="name"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
                   required
                   placeholder="Enter your full name"
-                  className={errors.name ? "border-red-500" : ""}
                 />
                 {errors.name && (
                   <p className="text-sm text-red-600 mt-1">{errors.name}</p>
@@ -136,7 +135,7 @@ const RegisterForm = () => {
                   Phone
                 </label>
                 <Input
-                  type="text"
+                  id="phone"
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
@@ -153,7 +152,7 @@ const RegisterForm = () => {
                   Email Address
                 </label>
                 <Input
-                  type="email"
+                  id="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
@@ -176,13 +175,13 @@ const RegisterForm = () => {
                   Password
                 </label>
                 <Input
-                  type="password"
+                  id="password"
+                  type="rd"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
                   required
                   placeholder="Create a strong password"
-                  className={errors.password ? "border-red-500" : ""}
                 />
                 {errors.password && (
                   <p className="text-sm text-red-600 mt-1">{errors.password}</p>
@@ -192,11 +191,13 @@ const RegisterForm = () => {
 
             <div>
               <Button
+                id="register"
                 type="submit"
                 disabled={loading}
                 className="w-full"
                 loading={loading}
-                variant="primary"
+                variant="contained"
+                sx={{backgroundColor: "black"}}
               >
                 Create Account
               </Button>
