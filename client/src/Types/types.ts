@@ -1,9 +1,5 @@
 import type {
-    Control,
     FieldErrors,
-    FieldValues,
-    Path,
-    RegisterOptions,
 } from "react-hook-form";
 import type { AutocompleteProps, ChipTypeMap } from "@mui/material";
 
@@ -61,7 +57,7 @@ export type CustomAutoCompleteWoControlProps<
 	ChipComponent extends React.ElementType = ChipTypeMap["defaultComponent"]
 > = Partial<FormComponentError> & {
 	id: string;
-	options: Array<string>;
+	options: Array<Value>;
 	label?: string;
 	limitTag?: number;
 } & Partial<

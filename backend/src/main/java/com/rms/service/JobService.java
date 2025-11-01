@@ -5,14 +5,12 @@ import com.rms.constants.JobStatus;
 import com.rms.constants.JobType;
 import com.rms.constants.RoleType;
 import com.rms.constants.SkillType;
-import com.rms.dto.jobs.CreateJobDto;
-import com.rms.dto.jobs.JobApplicationDto;
-import com.rms.dto.jobs.JobDTO;
-import com.rms.dto.jobs.UpdateJobDto;
+import com.rms.dto.jobs.*;
 import com.rms.entity.*;
 import com.rms.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -22,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class JobService {
@@ -45,18 +44,11 @@ public class JobService {
 
         userService.validateCompanyInfo(user);
 
-        Company company = companyRepository.findById(dto.getCompanyId())
-                .orElseThrow(() -> new RuntimeException("Company not found"));
-
         Recruiter recruiter = recruiterRepository.findByUserId(user.getId())
                 .orElseThrow(()-> new IllegalStateException("Recruiter not found"));
-        //validate if skills exists
-        if (dto.getSkillRequirementIds() != null) {
-            for (Long skillId : dto.getSkillRequirementIds()) {
-                if (!skillRepository.existsById(skillId)) {
-                    throw new RuntimeException("Skill not found: " + skillId);
-                }
-            }
+        Company company = recruiter.getCompany();
+        if (company == null) {
+            throw new RuntimeException("You must have a company assigned to create a job.");
         }
 
         Job job = modelMapper.map(dto, Job.class);
@@ -65,9 +57,11 @@ public class JobService {
         job.setPostedAt(LocalDateTime.now());
         job.setCompany(company);
         job.setCreatedBy(recruiter);
+        job.setStatus(JobStatus.OPEN.toString());
         job.setApplications(new ArrayList<>());
         job.setSkillRequirements(new ArrayList<>());
 
+        //validate if the skills are present
         if (dto.getSkillRequirementIds() != null) {
             Job finalJob = job;
             dto.getSkillRequirementIds().forEach(skillId -> {
@@ -100,6 +94,9 @@ public class JobService {
         userService.validateCompanyInfo(user);
 
         modelMapper.map(dto, job);
+
+        Recruiter recruiter = recruiterRepository.findByUserId(user.getId())
+                .orElseThrow(()-> new IllegalStateException("Recruiter not found"));
 
         if (dto.getStatus() != null) {
             JobStatus newStatus = JobStatus.valueOf(dto.getStatus().toUpperCase());
@@ -137,8 +134,74 @@ public class JobService {
                 .collect(Collectors.toList());
     }
 
-    public List<JobDTO> getJobsByCompany(Long companyId) {
-        return jobRepository.findOpenJobsByCompany(companyId).stream()
+    @Transactional
+    public JobDTO closeJob(Long id, JobCloseDto dto) {
+        Job job = jobRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Job not found"));
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Recruiter recruiter = recruiterRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new IllegalStateException("Recruiter profile not found"));
+
+
+        if (JobStatus.CLOSED.toString().equals(job.getStatus())) {
+            throw new RuntimeException("This job is already closed.");
+        }
+
+        boolean hasSelectedCandidates = dto.getSelectedCandidateIds() != null && !dto.getSelectedCandidateIds().isEmpty();
+        boolean hasReason = dto.getCloseReason() != null && !dto.getCloseReason().trim().isEmpty();
+
+        if (!hasSelectedCandidates && !hasReason) {
+            throw new RuntimeException("A closure comment/reason is required if no candidates are selected.");
+        }
+
+        // 6. Apply changes and save
+        job.setStatus(JobStatus.CLOSED.toString());
+        job.setCloseReason(dto.getCloseReason());
+
+        if (hasSelectedCandidates) {
+            job.setSelectedCandidateIds(dto.getSelectedCandidateIds());
+        }
+
+        Job savedJob = jobRepository.save(job);
+        return mapToDto(savedJob);
+    }
+
+    @Transactional
+    public void deleteJob(Long id) {
+        Job job = jobRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Job not found"));
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Recruiter recruiter = recruiterRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new IllegalStateException("Recruiter profile not found"));
+
+        if (!job.getCreatedBy().getId().equals(recruiter.getId())) {
+            throw new RuntimeException("You are not authorized to delete this job.");
+        }
+
+        jobRepository.delete(job);
+    }
+
+    public List<JobDTO> getJobsByCompany() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Recruiter recruiter = recruiterRepository.findByUserId(user.getId())
+                .orElseThrow(()-> new IllegalStateException("Recruiter not found"));
+
+        if (recruiter.getCompany() == null) {
+            throw new RuntimeException("You must update your company profile to view jobs.");
+        }
+        Long companyId = recruiter.getCompany().getId();
+        System.out.println(companyId);
+
+        return jobRepository.findJobsByCompany(companyId).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }

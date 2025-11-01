@@ -28,7 +28,7 @@ export const OtpVerificationDialog: React.FC<OtpVerificationDialogProps> = ({ em
     try {
       const response = await api.post("/auth/verify-otp", { email, otp });
       
-      const { token, userId, name, roles, isProfileComplete } = response.data.data;
+      const { token, userId, roles, isProfileComplete } = response.data.data;
 
       login(email, userId.toString(), roles, token, isProfileComplete);
       

@@ -7,6 +7,7 @@ interface AuthState {
   isAuthenticated: boolean;
   email: string | null;
   isLoading: boolean;
+  companyId?: number;
   roles: string[];
   login: (email: string, userId: string, roles: string[], token: string) => void;
   logout: () => void;

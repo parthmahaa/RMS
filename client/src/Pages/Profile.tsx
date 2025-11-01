@@ -1,16 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { Loader2, CheckCircle, XCircle, Building, User } from 'lucide-react'; // Added User icon
+import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 import api from '../utils/api';
 import Button from '../Components/ui/Button';
 import Input from '../Components/ui/Input';
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from '../Components/ui/Select';
 import FormSection from '../Components/ui/FormSection';
 import { useProfileCompletion } from '../Hooks/useProfileCompletion'
 import AutocompleteWoControl from '../Components/ui/AutoCompleteWoControl';

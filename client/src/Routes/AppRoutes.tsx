@@ -1,18 +1,30 @@
-import { Routes, Route, Outlet } from 'react-router-dom'
-import PublicRoute from './PublicRoute'
-import ProtectedRoute from './ProtectedRoute'
-import Home from '../Pages/Home'
-import Dashboard from '../Pages/Dashboard'
-import RegisterForm from '../Pages/Register'
-import LoginForm from '../Pages/Login'
-import Profile from '../Pages/Profile'
-import DashboardLayout from '../Components/layout/DashboardLayout'
-import Jobs from '../Pages/Jobs'
+import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
+import PublicRoute from './PublicRoute';
+import ProtectedRoute from './ProtectedRoute';
+import Dashboard from '../Pages/Dashboard';
+import RegisterForm from '../Pages/Register';
+import LoginForm from '../Pages/Login';
+import Profile from '../Pages/Profile';
+import DashboardLayout from '../Components/layout/DashboardLayout';
+import Jobs from '../Pages/Jobs';
+import useAuthStore from '../Store/authStore';
 
 const AppRoutes: React.FC = () => {
+    const isAuthenticated = useAuthStore((state: any) => state.isAuthenticated);
+    const isLoading = useAuthStore((state: any) => state.isLoading);
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+            </div>
+        );
+    }
+
     return (
         <Routes>
             <Route
+                path="/"
                 element={
                     <DashboardLayout onLogout={() => { }}>
                         <Outlet />
@@ -20,7 +32,7 @@ const AppRoutes: React.FC = () => {
                 }
             >
                 <Route
-                    path="/"
+                    index
                     element={
                         <ProtectedRoute>
                             <Dashboard />
@@ -28,7 +40,7 @@ const AppRoutes: React.FC = () => {
                     }
                 />
                 <Route
-                    path='/dashboard'
+                    path="dashboard"
                     element={
                         <ProtectedRoute>
                             <Dashboard />
@@ -36,43 +48,47 @@ const AppRoutes: React.FC = () => {
                     }
                 />
                 <Route
-                    path='/jobs'
+                    path="jobs"
                     element={
                         <ProtectedRoute>
-                            <Jobs/>
+                            <Jobs />
                         </ProtectedRoute>
                     }
                 />
                 <Route
-                    path='/profile'
+                    path="profile"
                     element={
                         <ProtectedRoute>
                             <Profile />
                         </ProtectedRoute>
                     }
                 />
+                {isAuthenticated && (
+                    <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                )}
             </Route>
+
             <Route
-                path='/login'
+                path="login"
                 element={
                     <PublicRoute>
                         <LoginForm />
                     </PublicRoute>
                 }
             />
-
             <Route
-                path='/register'
+                path="register"
                 element={
                     <PublicRoute>
                         <RegisterForm />
                     </PublicRoute>
                 }
             />
-            <Route path='*' element={<div className='text-center pt-20'>Page Not Found</div>} />
+            {!isAuthenticated && (
+                <Route path="*" element={<Navigate to="/login" replace />} />
+            )}
         </Routes>
+    );
+};
 
-    )
-}
-
-export default AppRoutes
+export default AppRoutes;

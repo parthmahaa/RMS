@@ -13,8 +13,8 @@ public interface JobRepository extends JpaRepository<Job, Long> {
 
     List<Job> findByStatus(String status);
 
-    @Query("SELECT j FROM Job j WHERE j.status = 'OPEN' AND j.company.id = :companyId")
-    List<Job> findOpenJobsByCompany(@Param("companyId") Long companyId);
+    @Query("SELECT j FROM Job j WHERE j.company.id = :companyId")
+    List<Job> findJobsByCompany(@Param("companyId") Long companyId);
 
     @Query("SELECT j FROM Job j WHERE j.status = 'OPEN'")
     List<Job> findAllOpenJobs();

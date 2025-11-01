@@ -34,8 +34,6 @@ public class Job {
     private String status;   // open, hold, closed
     private LocalDateTime postedAt;
 
-    // Close-specific fields
-    private String closeComment;
     private String closeReason;
     @ElementCollection
     @CollectionTable(name = "tbl_job_selected_candidates", joinColumns = @JoinColumn(name = "job_id"))

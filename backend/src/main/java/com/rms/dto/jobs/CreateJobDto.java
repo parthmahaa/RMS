@@ -28,7 +28,6 @@ public class CreateJobDto {
     @NotBlank(message = "Type is required")
     private String type; // e.g., "FULL_TIME", "INTERN"
 
-    @NotNull(message = "Company is required")
     private Long companyId;
 
     private List<@NotNull Long> skillRequirementIds;

@@ -12,8 +12,8 @@ const Dashboard = () => {
   }, [isAuthenticated, navigate]);
 
   return (
-    <div className="py-6">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">
+    <div className="py-1">
+      <h1 className="text-3xl font-bold mb-4 text-gray-800">
         Dashboard
       </h1>
       <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
