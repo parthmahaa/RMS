@@ -1,12 +1,10 @@
 ## Updates 
-    1. Improved authentication flow with OTP verification
-    2. Profile Updates for Candidates and Recruiters
+    1. UI rewamp
+    2. CRUD on jobs for recruiter, while closing a comment is needed if no candidate selected(testing edge cases for this)
 
 ## IN DEVELOPMENT
-    1. DASHBOARD FOR USERS BASED ON ROLES
-    2. ENDPOINTS TO LIST JOBS AND UPDATE CANDIDATE UI
-    3. RECRUITER DASHBOARD TO DO CRUD ON JOBS AND VIEW APPLICATIONS
-
+    1. Candidates can apply for job with CV
+    3. Recruiter can manage applications 
 
 ## TECH STACK
     React + Zustand for store management, SpringBoot, PostgreSQL 
