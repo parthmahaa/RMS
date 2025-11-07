@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.w3c.dom.Text;
 
 import java.time.LocalDateTime;
 
@@ -24,6 +25,8 @@ public class Applications {
     @ManyToOne
     @JoinColumn(name = "job_id", nullable = false)
     private Job job;
+
+    private String resumeFilePath;
 
     @ManyToOne
     @JoinColumn(name = "candidate_id", nullable = false)

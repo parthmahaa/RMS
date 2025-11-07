@@ -6,6 +6,7 @@ import {
 	DashboardOutlined,
 	LogoutOutlined,
 } from "@mui/icons-material";
+import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import WorkIcon from '@mui/icons-material/Work'
 import useAuthStore from "../../Store/authStore";
 import type { DashboardData } from "../../Types/types";
@@ -27,14 +28,6 @@ interface SidebarProps {
 }
 
 export function Sidebar({ }: SidebarProps) {
-	const navigation: NavItem[] = useMemo(
-		() => [
-			{ name: "Dashboard", icon: DashboardOutlined, path: "/dashboard" },
-			{ name: "Jobs", icon: WorkIcon, path: "/jobs" },
-		],
-		[]
-	);
-
 	const location = useLocation();
 	const pathname = location.pathname;
 	const navigate = useNavigate();
@@ -43,6 +36,20 @@ export function Sidebar({ }: SidebarProps) {
 	const email = useAuthStore((state: any) => state.email);
 	const roles = useAuthStore((state: any) => state.roles);
 	const logout = useAuthStore((state: any) => state.logout);
+
+	// Filter navigation based on role
+	const navigation = useMemo(() => {
+    const items: any[] = [{ name: "Dashboard", icon: DashboardOutlined, path: "/dashboard" }];
+
+    if (roles?.includes("RECRUITER")) {
+      items.push({ name: "Manage Jobs", icon: WorkIcon, path: "/jobs" });
+    } else if (roles?.includes("CANDIDATE")) {
+      items.push({ name: "Browse Jobs", icon: WorkIcon, path: "/jobs" });
+	  items.push({name: "Applications" , icon: PersonAddAltIcon, path: "/applications"});
+    }
+
+    return items;
+  }, [roles]);
 
 	const handleNavigation = (path: string) => {
 		navigate(path);

@@ -22,13 +22,13 @@ public class ApplicationController {
 
     @PostMapping
     @PreAuthorize("hasRole('CANDIDATE')")
-    public ResponseEntity<ApiResponse<JobApplicationDto>> applyToJob(@RequestParam Long jobId) {
+    public ResponseEntity<ApiResponse<JobApplicationDto>> applyToJob(@RequestBody JobApplicationDto dto) {
         try {
-            JobApplicationDto dto = applicationService.applyToJob(jobId);
+            JobApplicationDto response = applicationService.applyToJob(dto);
             return ResponseEntity.ok(ApiResponse.<JobApplicationDto>builder()
                     .status(HttpStatus.OK.value())
                     .message("Application submitted successfully")
-                    .data(dto)
+                    .data(response)
                     .isError(false)
                     .build());
         } catch (Exception e) {

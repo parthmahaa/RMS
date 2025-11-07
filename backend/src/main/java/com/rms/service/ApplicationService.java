@@ -34,32 +34,27 @@ public class ApplicationService {
     private final ModelMapper modelMapper;
 
     @Transactional
-    public JobApplicationDto applyToJob(Long jobId) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        UserEntity user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
-        if (!user.getRoles().contains(RoleType.CANDIDATE)) {
-            throw new RuntimeException("Only candidates can apply");
-        }
+    public JobApplicationDto applyToJob(JobApplicationDto dto) {
 
-        Job job = jobRepository.findById(jobId).orElseThrow(() -> new RuntimeException("Job not found"));
-        if (!JobStatus.OPEN.toString().equals(job.getStatus())) { // MODIFIED: Use toString() for safety
+        Job job = jobRepository.findById(dto.getJobId()).orElseThrow(() -> new RuntimeException("Job not found"));
+        if (!JobStatus.OPEN.toString().equals(job.getStatus())) {
             throw new RuntimeException("Job is not open");
         }
 
-        Candidate candidate = candidateRepository.findByUserId(user.getId())
+        Candidate candidate = candidateRepository.findByUserId(dto.getCandidateId())
                 .orElseThrow(() -> new RuntimeException("Candidate profile not found."));
 
         if (!candidate.isProfileComplete()) {
-            throw new RuntimeException("Profile must be completed before applying. Please update via /api/candidate/profile.");
+            throw new RuntimeException("Profile must be completed before applying.");
         }
 
-        if (applicationRepository.findByJobIdAndCandidateId(jobId, candidate.getId()).isPresent()) {
+        if (applicationRepository.findByJobIdAndCandidateId(dto.getJobId(), candidate.getId()).isPresent()) {
             throw new RuntimeException("Already applied");
         }
 
         Applications application = new Applications();
         application.setJob(job);
-        application.setCandidate(candidate); // Use the fetched candidate
+        application.setCandidate(candidate);
         application.setAppliedAt(LocalDateTime.now());
         application.setStatus(ApplicationStatus.PENDING);
 
@@ -83,9 +78,6 @@ public class ApplicationService {
     public List<JobApplicationDto> getMyApplications() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         UserEntity user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
-        if (!user.getRoles().contains(RoleType.CANDIDATE)) {
-            throw new RuntimeException("Only candidates can view their applications");
-        }
 
         Candidate candidate = candidateRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new RuntimeException("Candidate profile not found."));
@@ -128,6 +120,17 @@ public class ApplicationService {
         dto.setCandidateId(app.getCandidate().getId());
         dto.setStatus(app.getStatus() != null ? app.getStatus().name() : null);
         dto.setRecruiterComment(app.getRecruiterComment());
+
+        Job job = app.getJob();
+        if (job != null) {
+            dto.setPosition(job.getPosition());
+            dto.setLocation(job.getLocation());
+            dto.setType(job.getType());
+            if (job.getCompany() != null) {
+                dto.setCompanyName(job.getCompany().getName());
+            }
+        }
+
         return dto;
     }
 }

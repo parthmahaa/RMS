@@ -1,98 +1,89 @@
-import { Card, CardContent, CardActions, Typography, Chip, IconButton, Box } from '@mui/material';
-import { Delete, Edit, Close as CloseIcon, Visibility } from '@mui/icons-material';
+import { Chip } from '@mui/material';
+import { Delete, Edit, Close as CloseIcon} from '@mui/icons-material';
 import type { JobCardProps } from '../../Types/jobTypes';
 import { formatJobStatus, formatJobType, formatDate } from '../../utils/jobFormatters';
 
 const JobCard = ({ job, onDelete, onClose, onView, onEdit }: JobCardProps) => {
 
   return (
-    <Card className="h-full flex flex-col hover:shadow-xl transition-all duration-300 border border-gray-100">
-      <CardContent className="flex-1 cursor-pointer p-5" onClick={() => onView(job.id)}>
-        <Box className="flex justify-between items-start mb-3">
-          <Typography variant="h6" className="font-semibold text-gray-900 flex-1 pr-2">
-            {job.position}
-          </Typography>
+    <div
+      onClick={() => onView(job.id)}
+      className="bg-white border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 p-5 flex flex-col justify-between cursor-pointer"
+    >
+      <div className="flex justify-between items-start mb-3">
+        <h3 className="text-lg font-semibold text-gray-900">{job.position}</h3>
+        {job.status === 'OPEN' ? (
           <Chip
+            size="small"
             label={formatJobStatus(job.status)}
-            size="small"
-            className="shrink-0"
+            color="success"
+            className="text-white"
           />
-        </Box>
-
-        <Typography variant="body2" color="text.secondary" className="mb-3 font-medium">
-          {job.companyName}
-        </Typography>
-
-        <Typography variant="body2" className="mb-3 text-gray-600 flex items-center">
-          <span className="mr-1">📍</span> {job.location}
-        </Typography>
-
-        <Typography variant="body2" className="mb-4 line-clamp-2 text-gray-700 leading-relaxed">
-          {job.description}
-        </Typography>
-
-        <Box className="flex flex-wrap gap-2 mb-3">
-          <Chip label={formatJobType(job.type)} size="small" variant="outlined" className="font-medium" />
+        ) : (
           <Chip
-            label={`${job.applications.length} Application${job.applications.length !== 1 ? 's' : ''}`}
             size="small"
-            variant="outlined"
-            className="font-medium"
+            label={formatJobStatus(job.status)}
+            color="error"
+            className="text-white"
           />
-        </Box>
+        )}
+      </div>
 
-        <Typography variant="caption" color="text.secondary" className="block">
-          Posted on {formatDate(job.postedAt)}
-        </Typography>
-      </CardContent>
+      <p className="text-gray-600 text-sm mb-2 font-medium">{job.companyName}</p>
+      <p className="text-gray-500 text-sm mb-3">📍 {job.location}</p>
+      <p className="text-gray-700 text-sm line-clamp-2 mb-4">{job.description}</p>
 
-      <CardActions className="justify-between px-4 pb-4 pt-2 bg-gray-50 border-t border-gray-100">
-        <Box className="flex gap-2">
-            <IconButton
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(job.id);
-              }}
-              title="Edit Job"
-              sx={{
-                color: '#0284c7',
-                '&:hover': { backgroundColor: 'rgba(2, 132, 199, 0.1)' }
-              }}
-            >
-              <Edit fontSize="small" />
-            </IconButton>
-        </Box>
+      <div className="flex flex-wrap gap-2 mb-3">
+        <span className="text-xs font-medium border px-2 py-1 rounded-lg text-blue-700 border-blue-300 bg-blue-50">
+          {formatJobType(job.type)}
+        </span>
+        <span className="text-xs font-medium border px-2 py-1 rounded-lg text-gray-700 border-gray-300 bg-gray-50">
+          {job.applications.length} Application
+          {job.applications.length !== 1 && 's'}
+        </span>
+      </div>
 
-        <Box className="flex gap-1">
-            <IconButton
-              size="small"
-              color="warning"
+      <p className="text-xs text-gray-400">Posted on {formatDate(job.postedAt)}</p>
+
+      <div className="flex justify-between items-center pt-3">
+        <div className="flex gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(job.id);
+            }}
+            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"
+            title="Edit Job"
+          >
+            <Edit fontSize="small" />
+          </button>
+        </div>
+        <div className="flex gap-2">
+          {job.status !== 'CLOSED' && (
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 onClose(job.id);
               }}
+              className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-lg"
               title="Close Job"
-              className="hover:bg-orange-50"
             >
               <CloseIcon fontSize="small" />
-            </IconButton>
-
-          <IconButton
-            size="small"
-            color="error"
+            </button>
+          )}
+          <button
             onClick={(e) => {
               e.stopPropagation();
               onDelete(job.id);
             }}
+            className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg"
             title="Delete Job"
-            className="hover:bg-red-50"
           >
             <Delete fontSize="small" />
-          </IconButton>
-        </Box>
-      </CardActions>
-    </Card>
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 

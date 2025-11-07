@@ -2,14 +2,14 @@ import { create } from 'zustand'
 import api from '../utils/api'
 
 interface AuthState {
-  userId: string | null;
+  userId: number | null;
   token: string | null;
   isAuthenticated: boolean;
   email: string | null;
   isLoading: boolean;
   companyId?: number;
   roles: string[];
-  login: (email: string, userId: string, roles: string[], token: string) => void;
+  login: (email: string, userId: number, roles: string[], token: string) => void;
   logout: () => void;
   initializeAuth: () => Promise<void>;
 }
@@ -22,7 +22,7 @@ const useAuthStore = create<AuthState>((set) => ({
   isLoading: true,
   roles: [],
 
-  login: (email: string, userId: string, roles: string[], token: string) => {
+  login: (email: string, userId: number, roles: string[], token: string) => {
     localStorage.setItem('token', token);
     set({
       userId,

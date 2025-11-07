@@ -230,8 +230,6 @@ public class JobService {
         dto.setSkillRequirementIds(job.getSkillRequirements().stream().map(sr -> sr.getSkill().getId()).collect(Collectors.toList()));
         dto.setApplications(job.getApplications().stream().map(this::mapApplicationToDto).collect(Collectors.toList()));
 
-        // Also map closure fields
-        dto.setCloseComment(job.getCloseComment());
         dto.setCloseReason(job.getCloseReason());
         dto.setSelectedCandidateIds(job.getSelectedCandidateIds());
 
@@ -246,4 +244,5 @@ public class JobService {
         dto.setRecruiterComment(app.getRecruiterComment());
         return dto;
     }
+
 }

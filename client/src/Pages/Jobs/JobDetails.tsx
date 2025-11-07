@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Box, Typography, Chip, CircularProgress, Divider } from '@mui/material';
-import { ArrowBack, Edit } from '@mui/icons-material';
+import { CircularProgress } from '@mui/material';
+import { ArrowBack, Edit, Close, Delete } from '@mui/icons-material';
 import { toast } from 'sonner';
 import Button from '../../Components/ui/Button';
+import ConfirmDialog from '../../Components/ui/ConfirmDialog';
 import type { Job, Skill } from '../../Types/jobTypes';
-import { formatJobStatus, formatJobType, formatDate, formatApplicationStatus } from '../../utils/jobFormatters';
+import { formatJobStatus, formatJobType, formatDate } from '../../utils/jobFormatters';
 import api from '../../utils/api';
 
 interface JobDetailsProps {
@@ -17,6 +18,10 @@ const JobDetails = ({ jobId, onBack, onEdit }: JobDetailsProps) => {
   const [job, setJob] = useState<Job | null>(null);
   const [skills, setSkills] = useState<Skill[]>([]);
   const [loading, setLoading] = useState(true);
+  const [confirmData, setConfirmData] = useState<{
+    open: boolean;
+    action: 'delete' | 'close' | null;
+  }>({ open: false, action: null });
 
   useEffect(() => {
     fetchJobDetails();
@@ -24,14 +29,12 @@ const JobDetails = ({ jobId, onBack, onEdit }: JobDetailsProps) => {
   }, [jobId]);
 
   const fetchJobDetails = async () => {
-    setLoading(true);
     try {
+      setLoading(true);
       const response = await api.get(`/jobs/${jobId}`);
       setJob(response.data.data || null);
     } catch (error: any) {
-      console.error('Error fetching job:', error);
       toast.error(error.response?.data?.message || 'Failed to load job details');
-      setJob(null);
     } finally {
       setLoading(false);
     }
@@ -40,180 +43,189 @@ const JobDetails = ({ jobId, onBack, onEdit }: JobDetailsProps) => {
   const fetchSkills = async () => {
     try {
       const response = await api.get('/skills');
-      const skillsData = response.data.data || [];
-      setSkills(Array.isArray(skillsData) ? skillsData : []);
-    } catch (error: any) {
+      setSkills(response.data.data || []);
+    } catch (error) {
       console.error('Error fetching skills:', error);
-      setSkills([]);
+    }
+  };
+
+  const handleConfirmAction = async () => {
+    if (!job) return;
+    try {
+      if (confirmData.action === 'close') {
+        await api.put(`/jobs/${job.id}/close`);
+        toast.success('Job closed successfully');
+      } else if (confirmData.action === 'delete') {
+        await api.delete(`/jobs/${job.id}`);
+        toast.success('Job deleted successfully');
+      }
+      setConfirmData({ open: false, action: null });
+      onBack();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Action failed');
     }
   };
 
   if (loading) {
     return (
-      <Box className="flex justify-center items-center py-20">
+      <div className="flex justify-center items-center py-20">
         <CircularProgress />
-      </Box>
+      </div>
     );
   }
 
   if (!job) {
     return (
-      <Box className="text-center py-20">
-        <Typography variant="h6" color="text.secondary">
-          Job not found
-        </Typography>
-        <Button id="back-to-jobs" onClick={onBack} className="mt-4">
-          Back to Jobs
-        </Button>
-      </Box>
+      <div className="text-center py-20">
+        <h2 className="text-lg font-semibold text-gray-700 mb-3">Job not found</h2>
+        <Button id='back' onClick={onBack}>Back to Jobs</Button>
+      </div>
     );
   }
 
-  const jobSkills = skills.filter(skill => job.skillRequirementIds.includes(skill.id));
+  const jobSkills = skills.filter((skill) => job.skillRequirementIds.includes(skill.id));
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto p-6">
       <Button
-        id="back-button"
+        id='back'
         variant="outlined"
-        onClick={onBack}
         startIcon={<ArrowBack />}
-        className="mb-8"
-        size="medium"
-        >
+        onClick={onBack}
+        className="mb-6"
+      >
         Back to Jobs
       </Button>
 
-      <div className="bg-white rounded-lg mt-5 shadow-lg border border-gray-100 p-8">
-        <div className="flex justify-between items-start mb-6">
-          <div className="flex-1">
-            <Typography variant="h4" className="font-bold mb-3 text-gray-900">
+      <div className="bg-white border border-gray-200 rounded-2xl mt-2 p-5 transition-all">
+        <div className="flex justify-between items-start mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 tracking-tight mb-1">
               {job.position}
-            </Typography>
-            <Typography variant="h6" color="text.secondary" className="mb-2 font-medium">
-              {job.companyName}
-            </Typography>
+            </h1>
+            <p className="text-lg text-gray-600">{job.companyName}</p>
           </div>
+
           <div className="flex items-center gap-3">
-            <Chip 
-              label={formatJobStatus(job.status)} 
-              color={'default'}
-              size="medium"
-              className="shrink-0"
-            />
-              <Button
-                id="edit-job-button-header"
-                variant="contained"
-                onClick={() => onEdit(job.id)}
-                size="small"
-                startIcon={<Edit />}
-              >
-                Edit
-              </Button>
+            <span
+              className={`px-3 py-1 text-sm font-medium rounded-md border ${
+                job.status === 'CLOSED'
+                  ? 'bg-red-50 border-red-200 text-red-700'
+                  : 'bg-green-50 border-green-200 text-green-700'
+              }`}
+            >
+              {formatJobStatus(job.status)}
+            </span>
+            <Button
+              id='edit'
+              variant="contained"
+              size="small"
+              startIcon={<Edit />}
+              onClick={() => onEdit(job.id)}
+              className="!bg-gray-900 hover:!bg-gray-800 text-white shadow-sm"
+            >
+              Edit
+            </Button>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 mb-5">
-          <Chip label={formatJobType(job.type)} variant="outlined" />
-          <Chip label={`📍 ${job.location}`} variant="outlined" />
-          <Chip 
-            label={`${job.applications.length} Application${job.applications.length !== 1 ? 's' : ''}`} 
-            variant="outlined" 
-            />
+        <div className="flex flex-wrap gap-3 text-sm mb-6">
+          <span className="px-3 py-1 border border-gray-300 rounded-md bg-gray-50">
+            {formatJobType(job.type)}
+          </span>
+          <span className="px-3 py-1 border border-gray-300 rounded-md bg-gray-50 flex items-center gap-1">
+            📍 {job.location}
+          </span>
+          <span className="px-3 py-1 border border-gray-300 rounded-md bg-gray-50">
+            {job.applications.length} Applications
+          </span>
         </div>
 
-        <Typography variant="body2" color="text.secondary" className="mb-6 text-sm">
-          Posted on {formatDate(job.postedAt)}
-        </Typography>
+        <div className="mb-6">
+          <p className="text-sm text-gray-500">
+            Posted on <strong>{formatDate(job.postedAt)}</strong>
+          </p>
+          {job.closeReason && (
+            <p className="text-sm text-red-600 mt-1 italic">
+              Closed Reason: {job.closeReason.replace(/_/g, ' ')}
+            </p>
+          )}
+        </div>
 
-        <Divider className="my-8" />
+        <hr className="my-8 border-gray-200" />
 
-        <div className="mb-8">
-          <Typography variant="h6" className="font-semibold mb-4 text-gray-900">
-            Job Description
-          </Typography>
-          <Typography variant="body1" className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+        {/* Description */}
+        <section className="mb-6">
+          <h3 className="text-xl font-semibold text-gray-900 mb-3">Job Description</h3>
+          <p className="text-gray-700 whitespace-pre-line leading-relaxed">
             {job.description}
-          </Typography>
-        </div>
+          </p>
+        </section>
 
-        <Divider className="my-8" />
-
-        <div className="mb-8">
-          <Typography variant="h6" className="font-semibold mb-4 text-gray-900">
-            Required Skills
-          </Typography>
-          <div className="flex flex-wrap gap-2.5">
+        {/* Skills */}
+        <section className="mb-6">
+          <h3 className="text-xl font-semibold text-gray-900 mb-3">Required Skills</h3>
+          <div className="flex flex-wrap gap-2">
             {jobSkills.length > 0 ? (
-              jobSkills.map(skill => (
-                <Chip key={skill.id} label={skill.name} color="primary" variant="outlined" />
+              jobSkills.map((s) => (
+                <span
+                  key={s.id}
+                  className="px-3 py-1 border border-blue-300 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100"
+                >
+                  {s.name}
+                </span>
               ))
             ) : (
-              <Typography color="text.secondary">No skills specified</Typography>
+              <p className="text-gray-500 text-sm">No skills listed</p>
             )}
           </div>
+        </section>
+
+        <hr className="my-3 border-gray-200" />
+
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-3">
+          {job.status !=='CLOSED' &&(
+            <Button
+            id='close'
+            variant="outlined"
+            color="warning"
+            startIcon={<Close />}
+            onClick={() => setConfirmData({ open: true, action: 'close' })}
+          >
+            Close Job
+          </Button>
+          )}
+          <Button
+            id='delete'
+            variant="contained"
+            color="error"
+            startIcon={<Delete />}
+            onClick={() => setConfirmData({ open: true, action: 'delete' })}
+          >
+            Delete Job
+          </Button>
         </div>
-
-        {job.applications.length > 0 && (
-          <>
-            <Divider className="my-8" />
-            <div>
-              <Typography variant="h6" className="font-semibold mb-4 text-gray-900">
-                Applications ({job.applications.length})
-              </Typography>
-              <div className="space-y-4">
-                {job.applications.map(application => (
-                  <div key={application.id} className="border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
-                    <div className="flex justify-between items-start mb-2">
-                      <Typography variant="body1" className="font-medium">
-                        Candidate ID: {application.candidateId}
-                      </Typography>
-                      <Chip 
-                        label={formatApplicationStatus(application.status)} 
-                        size="small"
-                        color={
-                          application.status === 'ACCEPTED' ? 'success' :
-                          application.status === 'REJECTED' ? 'error' :
-                          'default'
-                        }
-                        />
-                    </div>
-                    <Typography variant="body2" color="text.secondary" className="mb-2">
-                      Applied on {formatDate(application.appliedAt)}
-                    </Typography>
-                    {application.recruiterComment && (
-                      <Typography variant="body2" className="text-gray-700">
-                        <strong>Comment:</strong> {application.recruiterComment}
-                      </Typography>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
-
-        {job.status === 'CLOSED' && (job.closeReason || job.closeComment) && (
-          <>
-            <Divider className="my-8" />
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
-              <Typography variant="h6" className="font-semibold mb-3 text-gray-900">
-                Closure Information
-              </Typography>
-              {job.closeReason && (
-                <Typography variant="body2" className="mb-2">
-                  <strong>Reason:</strong> {job.closeReason.replace(/_/g, ' ')}
-                </Typography>
-              )}
-              {job.closeComment && (
-                <Typography variant="body2">
-                  <strong>Comment:</strong> {job.closeComment}
-                </Typography>
-              )}
-            </div>
-          </>
-        )}
       </div>
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        open={confirmData.open}
+        title={
+          confirmData.action === 'delete'
+            ? 'Delete Job Posting'
+            : 'Close Job Posting'
+        }
+        message={
+          confirmData.action === 'delete'
+            ? 'Are you sure you want to permanently delete this job? This action cannot be undone.'
+            : 'Are you sure you want to close this job posting? Applicants will no longer be able to apply.'
+        }
+        confirmText={confirmData.action === 'delete' ? 'Delete' : 'Close'}
+        confirmColor={confirmData.action === 'delete' ? 'error' : 'warning'}
+        onCancel={() => setConfirmData({ open: false, action: null })}
+        onConfirm={handleConfirmAction}
+      />
     </div>
   );
 };

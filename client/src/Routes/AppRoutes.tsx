@@ -8,10 +8,12 @@ import Profile from '../Pages/Profile';
 import DashboardLayout from '../Components/layout/DashboardLayout';
 import Jobs from '../Pages/Jobs';
 import useAuthStore from '../Store/authStore';
-
+import CandidateDashboard from '../Pages/CandidateDashboard';
+import Applications from '../Pages/Applications';
 const AppRoutes: React.FC = () => {
     const isAuthenticated = useAuthStore((state: any) => state.isAuthenticated);
     const isLoading = useAuthStore((state: any) => state.isLoading);
+    const roles = useAuthStore((state: any) => state.roles);
 
     if (isLoading) {
         return (
@@ -35,7 +37,7 @@ const AppRoutes: React.FC = () => {
                     index
                     element={
                         <ProtectedRoute>
-                            <Dashboard />
+                            <Dashboard/>
                         </ProtectedRoute>
                     }
                 />
@@ -43,7 +45,7 @@ const AppRoutes: React.FC = () => {
                     path="dashboard"
                     element={
                         <ProtectedRoute>
-                            <Dashboard />
+                            <Dashboard/>
                         </ProtectedRoute>
                     }
                 />
@@ -51,7 +53,15 @@ const AppRoutes: React.FC = () => {
                     path="jobs"
                     element={
                         <ProtectedRoute>
-                            <Jobs />
+                            {roles.includes("CANDIDATE") ? <CandidateDashboard/> : <Jobs />}
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path='applications'
+                    element={
+                        <ProtectedRoute>
+                            {roles.includes("CANDIDATE") ? <Applications /> : <Navigate to="/dashboard" replace />}
                         </ProtectedRoute>
                     }
                 />

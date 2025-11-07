@@ -12,6 +12,12 @@ export interface JobApplication {
   appliedAt: string;
   recruiterComment: string | null;
   status: string;
+  position?: string;
+  coverLetter?: string;
+  resumeFilePath?: string;
+  companyName?: string;
+  location?: string;
+  type?: string;
 }
 
 export interface Job {
@@ -76,4 +82,26 @@ export interface CloseDialogProps {
   closeComment: string;
   onReasonChange: (reason: string) => void;
   onCommentChange: (comment: string) => void;
+}
+
+// Candidate-specific types
+export interface JobApplicationFormData {
+  coverLetter: string;
+  resumeFilePath?: string;
+  jobId: number;
+  candidateId: number;
+}
+
+export interface CandidateJobCardProps {
+  job: Job;
+  onApply: (jobId: number) => void;
+  onView: (jobId: number) => void;
+  hasApplied: boolean;
+}
+
+export interface ApplicationFormProps {
+  open: boolean;
+  job: Job;
+  onClose: () => void;
+  onSubmit: (data: JobApplicationFormData) => Promise<void>;
 }
