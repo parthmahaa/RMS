@@ -29,6 +29,8 @@ public class JobSkillRequirement {
 
     private boolean mandatory;
 
+    private Integer yearsOfExperience;
+
     @Enumerated(EnumType.STRING)
     private SkillType level;  // basic ,intermediate, advanced
 

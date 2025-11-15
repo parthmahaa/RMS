@@ -6,6 +6,7 @@ import {
 	DashboardOutlined,
 	LogoutOutlined,
 } from "@mui/icons-material";
+import UploadIcon from '@mui/icons-material/Upload';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import WorkIcon from '@mui/icons-material/Work'
 import useAuthStore from "../../Store/authStore";
@@ -43,6 +44,7 @@ export function Sidebar({ }: SidebarProps) {
 
     if (roles?.includes("RECRUITER")) {
       items.push({ name: "Manage Jobs", icon: WorkIcon, path: "/jobs" });
+      items.push({ name: "Upload", icon: UploadIcon, path: "/upload" });
     } else if (roles?.includes("CANDIDATE")) {
       items.push({ name: "Browse Jobs", icon: WorkIcon, path: "/jobs" });
 	  items.push({name: "Applications" , icon: PersonAddAltIcon, path: "/applications"});

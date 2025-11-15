@@ -1,5 +1,6 @@
 package com.rms.dto.jobs;
 
+import com.rms.dto.skills.SkillReqDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,6 +26,6 @@ public class JobDTO {
     private List<Long> selectedCandidateIds;
     private String companyName;
     private Long createdById;
-    private List<Long> skillRequirementIds;
+    private List<SkillReqDTO> skillRequirements;
     private List<JobApplicationDto> applications;
 }

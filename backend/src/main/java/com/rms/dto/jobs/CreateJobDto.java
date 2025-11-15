@@ -1,5 +1,6 @@
 package com.rms.dto.jobs;
 
+import com.rms.dto.skills.SkillReqDTO;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -30,5 +31,5 @@ public class CreateJobDto {
 
     private Long companyId;
 
-    private List<@NotNull Long> skillRequirementIds;
+    private List<SkillReqDTO> skillRequirementIds;
 }

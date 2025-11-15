@@ -1,5 +1,6 @@
 package com.rms.dto.jobs;
 
+import com.rms.dto.skills.SkillReqDTO;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -30,5 +31,5 @@ public class UpdateJobDto {
     private String closeReason;
     private List<@NotNull Long> selectedCandidateIds;
 
-    private List<@NotNull Long> skillRequirementIds;
+    private List<SkillReqDTO> skillRequirementIds;
 }

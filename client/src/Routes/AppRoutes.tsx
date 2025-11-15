@@ -10,6 +10,8 @@ import Jobs from '../Pages/Jobs';
 import useAuthStore from '../Store/authStore';
 import CandidateDashboard from '../Pages/CandidateDashboard';
 import Applications from '../Pages/Applications';
+import Upload from '../Pages/Upload';
+import Interview from '../Pages/Interview';
 const AppRoutes: React.FC = () => {
     const isAuthenticated = useAuthStore((state: any) => state.isAuthenticated);
     const isLoading = useAuthStore((state: any) => state.isLoading);
@@ -62,6 +64,22 @@ const AppRoutes: React.FC = () => {
                     element={
                         <ProtectedRoute>
                             {roles.includes("CANDIDATE") ? <Applications /> : <Navigate to="/dashboard" replace />}
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="upload"
+                    element={
+                        <ProtectedRoute>
+                            {roles.includes("RECRUITER") ? <Upload /> : <Navigate to="/dashboard" replace />}
+                        </ProtectedRoute>
+                    }
+                    />
+                <Route
+                    path="interviews"
+                    element={
+                        <ProtectedRoute>
+                            {roles.includes("RECRUITER") ? <Interview /> : <Navigate to="/dashboard" replace />  }
                         </ProtectedRoute>
                     }
                 />

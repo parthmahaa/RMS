@@ -6,6 +6,7 @@ import com.rms.constants.JobType;
 import com.rms.constants.RoleType;
 import com.rms.constants.SkillType;
 import com.rms.dto.jobs.*;
+import com.rms.dto.skills.SkillReqDTO;
 import com.rms.entity.*;
 import com.rms.repository.*;
 import jakarta.transaction.Transactional;
@@ -61,16 +62,18 @@ public class JobService {
         job.setApplications(new ArrayList<>());
         job.setSkillRequirements(new ArrayList<>());
 
-        //validate if the skills are present
         if (dto.getSkillRequirementIds() != null) {
             Job finalJob = job;
-            dto.getSkillRequirementIds().forEach(skillId -> {
-                Skill skill = skillRepository.findById(skillId).orElseThrow(() -> new RuntimeException("Skill not found"));
+            dto.getSkillRequirementIds().forEach(reqDto -> {
+                Skill skill = skillRepository.findById(reqDto.getSkillId())
+                        .orElseThrow(() -> new RuntimeException("Skill not found: " + reqDto.getSkillId()));
+
                 JobSkillRequirement req = JobSkillRequirement.builder()
                         .skill(skill)
                         .job(finalJob)
-                        .mandatory(true)
-                        .level(SkillType.INTERMEDIATE)
+                        .mandatory(reqDto.isMandatory())
+                        .level(reqDto.getLevel() != null ? reqDto.getLevel() : SkillType.INTERMEDIATE)
+                        .yearsOfExperience(reqDto.getYearsOfExperience())
                         .build();
                 finalJob.getSkillRequirements().add(req);
             });
@@ -111,14 +114,19 @@ public class JobService {
 
         if (dto.getSkillRequirementIds() != null) {
             job.getSkillRequirements().clear();
+            jobSkillRequirementRepository.deleteById(job.getId());
+
             Job finalJob = job;
-            dto.getSkillRequirementIds().forEach(skillId -> {
-                Skill skill = skillRepository.findById(skillId).orElseThrow(() -> new RuntimeException("Skill not found"));
+            dto.getSkillRequirementIds().forEach(reqDto -> {
+                Skill skill = skillRepository.findById(reqDto.getSkillId())
+                        .orElseThrow(() -> new RuntimeException("Skill not found: " + reqDto.getSkillId()));
+
                 JobSkillRequirement req = JobSkillRequirement.builder()
                         .skill(skill)
                         .job(finalJob)
-                        .mandatory(true)
-                        .level(SkillType.INTERMEDIATE)
+                        .mandatory(reqDto.isMandatory())
+                        .level(reqDto.getLevel() != null ? reqDto.getLevel() : SkillType.INTERMEDIATE)
+                        .yearsOfExperience(reqDto.getYearsOfExperience()) // <-- SETTING NEW FIELD
                         .build();
                 finalJob.getSkillRequirements().add(req);
             });
@@ -227,7 +235,11 @@ public class JobService {
         dto.setCreatedById(job.getCreatedBy().getId());
         dto.setType(job.getType() != null ? job.getType() : null);
         dto.setStatus(job.getStatus() != null ? job.getStatus() : null);
-        dto.setSkillRequirementIds(job.getSkillRequirements().stream().map(sr -> sr.getSkill().getId()).collect(Collectors.toList()));
+
+        dto.setSkillRequirements(job.getSkillRequirements().stream()
+                .map(this::mapSkillRequirementToDto)
+                .collect(Collectors.toList()));
+
         dto.setApplications(job.getApplications().stream().map(this::mapApplicationToDto).collect(Collectors.toList()));
 
         dto.setCloseReason(job.getCloseReason());
@@ -243,6 +255,16 @@ public class JobService {
         dto.setStatus(app.getStatus() != null ? app.getStatus().name() : null);
         dto.setRecruiterComment(app.getRecruiterComment());
         return dto;
+    }
+
+    private SkillReqDTO mapSkillRequirementToDto(JobSkillRequirement req) {
+        return SkillReqDTO.builder()
+                .skillId(req.getSkill().getId())
+                .skillName(req.getSkill().getName())
+                .yearsOfExperience(req.getYearsOfExperience())
+                .level(req.getLevel())
+                .mandatory(req.isMandatory())
+                .build();
     }
 
 }
