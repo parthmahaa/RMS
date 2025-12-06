@@ -32,6 +32,13 @@ public class AdminService {
     }
 
     @Transactional
+    public void deleteUser(Long userId) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+        userRepository.delete(user);
+    }
+
+    @Transactional
     public UserDTO updateUserProfile(Long userId, UpdateUserDTO dto) {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));

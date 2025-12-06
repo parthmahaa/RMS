@@ -48,7 +48,9 @@ export function Sidebar({ }: SidebarProps) {
     } else if (roles?.includes("CANDIDATE")) {
       items.push({ name: "Browse Jobs", icon: WorkIcon, path: "/jobs" });
 	  items.push({name: "Applications" , icon: PersonAddAltIcon, path: "/applications"});
-    }
+	}else if(roles?.includes("ADMIN")){
+		items.push({ name: "Users", icon: PersonAddAltIcon, path: "/users" });
+	}
 
     return items;
   }, [roles]);

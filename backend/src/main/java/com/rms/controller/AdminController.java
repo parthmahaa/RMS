@@ -146,6 +146,26 @@ public class AdminController {
         }
     }
 
+    @DeleteMapping("/users/{userId}")
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long userId) {
+        try {
+            adminService.deleteUser(userId);
+            return ResponseEntity.ok(ApiResponse.<Void>builder()
+                    .status(HttpStatus.OK.value())
+                    .message("User deleted successfully")
+                    .data(null)
+                    .isError(false)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<Void>builder()
+                    .status(HttpStatus.NOT_FOUND.value())
+                    .message(e.getMessage())
+                    .data(null)
+                    .isError(true)
+                    .build());
+        }
+    }
+
     @PutMapping("/users/{userId}/roles")
     public ResponseEntity<ApiResponse<UserDTO>> updateUserRoles(
             @PathVariable Long userId,

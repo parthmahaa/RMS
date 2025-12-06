@@ -12,6 +12,7 @@ import CandidateDashboard from '../Pages/CandidateDashboard';
 import Applications from '../Pages/Applications';
 import Upload from '../Pages/Upload';
 import Interview from '../Pages/Interview';
+import Users from '../Pages/Users';
 const AppRoutes: React.FC = () => {
     const isAuthenticated = useAuthStore((state: any) => state.isAuthenticated);
     const isLoading = useAuthStore((state: any) => state.isLoading);
@@ -83,6 +84,14 @@ const AppRoutes: React.FC = () => {
                         </ProtectedRoute>
                     }
                 />
+                <Route
+                    path="users"
+                    element={
+                      <ProtectedRoute>
+                        {roles.includes("ADMIN") ? <Users/> : <Navigate to="/dashboard" replace />}
+                      </ProtectedRoute> 
+                    }
+                    />
                 <Route
                     path="profile"
                     element={
