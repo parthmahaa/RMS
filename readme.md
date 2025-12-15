@@ -1,6 +1,8 @@
 ## Updates 
-    1. Recruiters can add/update skills to existing jobs
-    2. Endpoints for admins to manage roles and users.  
+    1. Recruiters can bulk upload candidates.
+    2. Candidates can login after setting the password
 
+## ISSUES
+    1. Testing cases and format errors for excel files.
 ## TECH STACK
     React + Zustand for store management, SpringBoot, PostgreSQL 
