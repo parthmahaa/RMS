@@ -37,10 +37,15 @@ public class Candidate{
 
     private String location;
 
+    // used when recruiter tries to add employees in bulk
+    @Column(name = "associated_company_id")
+    private Long associatedCompanyId;
+
     private Integer totalExperience;
     private Integer graduationYear;
     private String collegeName;
     private String degree;
+    private String branch;
     private String resumeFilePath;
     private String currentCompany;
 

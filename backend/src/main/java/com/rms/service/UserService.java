@@ -142,7 +142,7 @@ public class UserService {
 
             modelMapper.map(dto,candidate);
             candidate.getUserSkills().clear();
-
+            candidate.setBranch(dto.getBranch());
             if (dto.getSkills() != null) {
                 dto.getSkills().forEach(skillDto -> {
                     Skill skill = skillRepository.findById(skillDto.getSkillId())
@@ -206,6 +206,7 @@ public class UserService {
             return CandidateProfileDto.builder()
                     .id(candidate.getId())
                     .name(user.getName())
+                    .branch(candidate.getBranch())
                     .email(user.getEmail())
                     .role(RoleType.CANDIDATE.name())
                     .summary(candidate.getSummary())

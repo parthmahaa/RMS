@@ -1,6 +1,7 @@
 package com.rms.entity;
 
 import com.rms.constants.RoleType;
+import com.rms.constants.UserStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -50,6 +51,10 @@ public class UserEntity  implements UserDetails  {
 
     @Column(name = "is_verified")
     private boolean isVerified = false;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private UserStatus status = UserStatus.ACTIVE;
 
     @Column(name = "otp")
     private String otp;

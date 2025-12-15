@@ -22,6 +22,7 @@ public class CandidateProfileDto {
     private String location;
     private String role="CANDIDATE";
     private Integer totalExperience;
+    private String branch;
     private Integer graduationYear;
     private String collegeName;
     private String degree;

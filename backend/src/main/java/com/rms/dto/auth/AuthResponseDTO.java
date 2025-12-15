@@ -2,6 +2,7 @@ package com.rms.dto.auth;
 
 import com.rms.constants.RoleType;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -10,6 +11,7 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class AuthResponseDTO {
     private String token;
     private Long userId;
