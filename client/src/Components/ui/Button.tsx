@@ -4,7 +4,7 @@ import { Button as ButtonMui, type ButtonProps } from "@mui/material";
 
 const Button = forwardRef<
   HTMLButtonElement,
-  ButtonProps & { id: string; withPlusIcon?: boolean }
+  ButtonProps & { id?: string; withPlusIcon?: boolean }
 >((props, ref) => {
   const { id, variant = "contained", size = "small", withPlusIcon, ...otherProps } = props;
 

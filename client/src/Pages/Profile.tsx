@@ -18,6 +18,7 @@ interface UserSkillDto {
 interface CandidateProfileDto {
   id: number;
   name: string;
+  branch : string;
   email: string;
   role: string[];
   profileCompleted: boolean;
@@ -91,6 +92,7 @@ const Profile: React.FC = () => {
           location: candidateData.location || '',
           totalExperience: candidateData.totalExperience ?? '',
           graduationYear: candidateData.graduationYear ?? '',
+          branch : candidateData.branch,
           collegeName: candidateData.collegeName || '',
           degree: candidateData.degree || '',
           currentCompany: candidateData.currentCompany || '',
@@ -190,6 +192,7 @@ const Profile: React.FC = () => {
           totalExperience: formData.totalExperience === '' ? null : Number(formData.totalExperience),
           graduationYear: formData.graduationYear === '' ? null : Number(formData.graduationYear),
           collegeName: formData.collegeName,
+          branch: formData.branch,
           degree: formData.degree,
           currentCompany: formData.currentCompany,
           resumeFilePath: formData.resumeFilePath,
@@ -220,6 +223,7 @@ const Profile: React.FC = () => {
           summary: candidateData.summary || '',
           phone: candidateData.phone || '',
           location: candidateData.location || '',
+          branch : candidateData.branch,
           totalExperience: candidateData.totalExperience ?? '',
           graduationYear: candidateData.graduationYear ?? '',
           collegeName: candidateData.collegeName || '',
@@ -296,7 +300,8 @@ const Profile: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div><label className="block text-sm font-medium text-black mb-1">Phone</label><Input id='phone' name="phone" value={formData.phone} onChange={handleChange} disabled={!isEditing} placeholder="Your phone number" /></div>
               <div><label className="block text-sm font-medium text-black mb-1">Location</label><Input id='location' name="location" value={formData.location} onChange={handleChange} disabled={!isEditing} placeholder="City, Country" /></div>
-              <div><label className="block text-sm font-medium text-black mb-1">Degree</label><Input id='degree' name="degree" value={formData.degree} onChange={handleChange} disabled={!isEditing} placeholder="e.g., B.Tech CSE" /></div>
+              <div><label className="block text-sm font-medium text-black mb-1">Degree</label><Input id='degree' name="degree" value={formData.degree} onChange={handleChange} disabled={!isEditing} placeholder="e.g., B.Tech" /></div>
+              <div><label className="block text-sm font-medium text-black mb-1">Branch</label><Input id='branch' name="branch" value={formData.branch} onChange={handleChange} disabled={!isEditing} placeholder="Computer Engineering" /></div>
               <div><label className="block text-sm font-medium text-black mb-1">College</label><Input id='collegeName' name="collegeName" value={formData.collegeName} onChange={handleChange} disabled={!isEditing} placeholder="University name" /></div>
               <div><label className="block text-sm font-medium text-black mb-1">Graduation Year</label><Input id='graduationYear' name="graduationYear" value={formData.graduationYear ?? ''} onChange={handleChange} disabled={!isEditing} type="number" placeholder="YYYY" /></div>
               <div><label className="block text-sm font-medium text-black mb-1">Total Experience (Years)</label><Input id='totalExperience' name="totalExperience" value={formData.totalExperience ?? ''} onChange={handleChange} disabled={!isEditing} type="number" placeholder="e.g., 5" /></div>

@@ -6,13 +6,16 @@ import Button from "../Components/ui/Button";
 import Input  from "../Components/ui/Input";
 import api from "../utils/api";
 import {OtpVerificationDialog} from "../Components/ui/OtpVerification";
-
+import { SetPasswordDialog } from "../Components/ui/SetPasswordDialog";
 const LoginForm = () => {
   const navigate = useNavigate();
+  const [showSetPassDialog, setShowSetPassDialog] = useState(false);
   const login = useAuthStore((state: any) => state.login);
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [showOtpDialog, setShowOtpDialog] = useState(false);
+  const [showActivateDialog, setShowActivateDialog] = useState(false);
+  const [invitedEmail, setInvitedEmail] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -39,8 +42,11 @@ const LoginForm = () => {
       console.error('Login error:', error);
 
       const errorMessage = error?.response?.data?.message || "Login failed. Please try again.";
-
-      if (errorMessage.includes("Account is not verified")) {
+      if (errorMessage.includes("INVITED_USER")) {
+        toast.info("Account not active. Please set your password.");
+        setInvitedEmail(formData.email);
+        setShowSetPassDialog(true);
+      }else if (errorMessage.includes("Account is not verified")) {
         toast.info(errorMessage); 
         setShowOtpDialog(true);   
       } else {
@@ -117,6 +123,13 @@ const LoginForm = () => {
           </form>
         </div>
       </div>
+
+      {showSetPassDialog && (
+        <SetPasswordDialog 
+          email={invitedEmail} 
+          onClose={() => setShowSetPassDialog(false)} 
+        />
+      )}
 
       {showOtpDialog && (
         <OtpVerificationDialog
