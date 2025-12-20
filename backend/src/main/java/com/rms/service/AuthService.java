@@ -38,20 +38,15 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     public AuthResponseDTO login(LoginRequestDTO dto) {
-        // 1. Fetch user to check status BEFORE authentication
         UserEntity user = userRepo.findByEmail(dto.getEmail())
                 .orElseThrow(() -> new BadCredentialsException("Invalid email or password."));
 
-        // 2. Intercept INVITED users
         if (user.getStatus() == UserStatus.INVITED) {
-            // Generate OTP and send it (email service logic)
             generateAndSendOtp(user);
 
-            // Throw specific message for Frontend to catch
             throw new BadCredentialsException("INVITED_USER");
         }
 
-        // 3. Authenticate (Only for ACTIVE users or those with set passwords)
         Authentication authentication;
         try {
             authentication = authenticationManager.authenticate(
@@ -61,7 +56,6 @@ public class AuthService {
             throw new BadCredentialsException("Invalid email or password.");
         }
 
-        // 4. Generate Token
         UserEntity userDetails = (UserEntity) authentication.getPrincipal();
         String jwt = authUtil.generateAccessToken(userDetails);
 
@@ -172,13 +166,6 @@ public class AuthService {
             } catch (Exception e) {
                 throw new IllegalArgumentException("Invalid email address format.");
             }
-
-//            Company company = companyRepository.findByWebsiteContaining(emailDomain)
-//                    .orElseThrow(() -> new IllegalArgumentException(
-//                            "Your company is not registered for domain '" + emailDomain + "'. " +
-//                                    "Please contact an admin to register your company."
-//                    ));
-
             UserEntity savedUser = userRepo.save(user);
 
             Recruiter recruiter = Recruiter.builder()

@@ -9,7 +9,7 @@ import api from '../utils/api';
 import type { Job, JobFormData } from '../Types/jobTypes';
 
 const JobsPage = () => {
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const [ jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
   const [editingJobId, setEditingJobId] = useState<number | null>(null);

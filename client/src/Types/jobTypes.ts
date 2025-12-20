@@ -33,7 +33,7 @@ export interface Job {
   selectedCandidateIds: number[];
   companyName: string;
   createdById: number;
-  skillRequirementIds: number[];
+  skillRequirements: number[];
   applications: JobApplication[];
 }
 

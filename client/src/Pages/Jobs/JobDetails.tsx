@@ -83,7 +83,7 @@ const JobDetails = ({ jobId, onBack, onEdit }: JobDetailsProps) => {
     );
   }
 
-  const jobSkills = skills.filter((skill) => job.skillRequirementIds.includes(skill.id));
+  const jobSkills = skills.filter((skill) => job.skillRequirements.includes(skill.id));
 
   return (
     <div className="max-w-5xl mx-auto p-6">

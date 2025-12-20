@@ -79,7 +79,7 @@ public class RecruiterService {
                 Row currentRow = rows.next();
                 rowNum++;
 
-                // Validate Header Row (Row 1)
+                // Validate Header Row
                 if (rowNum == 1) {
                     validateHeaders(currentRow);
                     continue;
@@ -87,16 +87,12 @@ public class RecruiterService {
 
                 if (isRowEmpty(currentRow)) continue;
 
-                // --- 3. Extract Data Using New Column Constants ---
-
-                // MANDATORY FIELDS (Green)
                 String name = getCellValue(currentRow, COL_NAME, true, rowNum, "Name");
                 String email = getCellValue(currentRow, COL_EMAIL, true, rowNum, "Email");
                 String phone = getCellValue(currentRow, COL_PHONE, true, rowNum, "Phone");
                 String expStr = getCellValue(currentRow, COL_EXP, true, rowNum, "Experience");
                 String currentCompany = getCellValue(currentRow, COL_COMPANY, true, rowNum, "Current Company");
 
-                // OPTIONAL FIELDS (Blue)
                 String location = getCellValue(currentRow, COL_LOCATION, false, rowNum, "Location");
                 String gradYearStr = getCellValue(currentRow, COL_GRAD_YEAR, false, rowNum, "Graduation Year");
                 String college = getCellValue(currentRow, COL_COLLEGE, false, rowNum, "College Name");
@@ -104,7 +100,6 @@ public class RecruiterService {
                 String branch = getCellValue(currentRow, COL_BRANCH, false, rowNum, "Branch");
                 String skillsStr = getCellValue(currentRow, COL_SKILLS, false, rowNum, "Skills");
 
-                // Duplicate Check
                 if (userRepo.findByEmail(email).isPresent()) {
                     throw new IllegalArgumentException("Row " + rowNum + ": Email '" + email + "' already exists.");
                 }
@@ -122,7 +117,6 @@ public class RecruiterService {
 
                 UserEntity savedUser = userRepo.save(user);
 
-                // Combine Degree and Branch for storage (since Candidate entity lacks 'branch')
                 String fullDegree = degree;
                 if (branch != null && !branch.isEmpty()) {
                     fullDegree = (degree != null ? degree : "") + " - " + branch;
@@ -137,7 +131,7 @@ public class RecruiterService {
                         .location(location)
                         .graduationYear(parseInteger(gradYearStr))
                         .collegeName(college)
-                        .degree(fullDegree) // Storing Degree + Branch here
+                        .degree(fullDegree)
                         .associatedCompanyId(companyId)
                         .profileCompleted(false)
                         .build();
@@ -169,7 +163,7 @@ public class RecruiterService {
 
     private String getCellValue(Row row, int index, boolean isMandatory, int rowNum, String fieldName) {
         Cell cell = row.getCell(index);
-        DataFormatter formatter = new DataFormatter(); // Handles string, numeric, etc. safely
+        DataFormatter formatter = new DataFormatter();
         String value = formatter.formatCellValue(cell).trim();
 
         if (isMandatory && value.isEmpty()) {

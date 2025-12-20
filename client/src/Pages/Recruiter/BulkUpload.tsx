@@ -51,7 +51,6 @@ const BulkUpload = () => {
       setUploadSuccess(true);
       toast.success(response.data.message || 'File uploaded successfully!');
       
-      // Reset file selection after successful upload
       setSelectedFile(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
