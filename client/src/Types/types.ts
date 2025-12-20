@@ -56,7 +56,7 @@ export type CustomAutoCompleteWoControlProps<
 	FreeSolo extends boolean | undefined,
 	ChipComponent extends React.ElementType = ChipTypeMap["defaultComponent"]
 > = Partial<FormComponentError> & {
-	id: string;
+	id?: string;
 	options: Array<Value>;
 	label?: string;
 	limitTag?: number;

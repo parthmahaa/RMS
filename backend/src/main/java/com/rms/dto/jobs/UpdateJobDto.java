@@ -31,5 +31,7 @@ public class UpdateJobDto {
     private String closeReason;
     private List<@NotNull Long> selectedCandidateIds;
 
-    private List<SkillReqDTO> skillRequirementIds;
+    private List<Long> requiredSkillIds;
+    private List<Long> preferredSkillIds;
+
 }

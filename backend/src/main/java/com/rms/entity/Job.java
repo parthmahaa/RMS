@@ -1,5 +1,6 @@
 package com.rms.entity;
 
+import com.rms.constants.JobStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,7 +32,9 @@ public class Job {
 
     private String location;
     private String type;   //Full time, intern, part time, contract
-    private String status;   // open, hold, closed
+
+    @Enumerated(EnumType.STRING)
+    private JobStatus status;   // open, hold, closed
     private LocalDateTime postedAt;
 
     private String closeReason;
@@ -48,8 +51,21 @@ public class Job {
     @JoinColumn(name = "created_by_user_id", nullable = false)
     private Recruiter createdBy;
 
-    @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<JobSkillRequirement> skillRequirements = new ArrayList<>();
+    @ManyToMany
+    @JoinTable(
+            name = "tbl_job_required_skills",
+            joinColumns = @JoinColumn(name = "job_id"),
+            inverseJoinColumns = @JoinColumn(name = "skill_id")
+    )
+    private List<Skill> requiredSkills = new ArrayList<>();
+
+    @ManyToMany
+    @JoinTable(
+            name = "tbl_job_preferred_skills",
+            joinColumns = @JoinColumn(name = "job_id"),
+            inverseJoinColumns = @JoinColumn(name = "skill_id")
+    )
+    private List<Skill> preferredSkills = new ArrayList<>();
 
     @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Applications> applications = new ArrayList<>();

@@ -26,6 +26,7 @@ public class JobDTO {
     private List<Long> selectedCandidateIds;
     private String companyName;
     private Long createdById;
-    private List<SkillReqDTO> skillRequirements;
+    private List<SkillReqDTO> requiredSkills;
+    private List<SkillReqDTO> preferredSkills;
     private List<JobApplicationDto> applications;
 }
