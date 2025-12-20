@@ -39,6 +39,8 @@ public class CandidateProfileUpdateDto {
 
     private String resumeFilePath;
 
+    private String branch;
+
     private String currentCompany;
 
     @Valid

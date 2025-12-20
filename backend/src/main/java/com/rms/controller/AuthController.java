@@ -38,6 +38,42 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/activate-account")
+    public ResponseEntity<ApiResponse<String>> activateAccount(@RequestBody SetPasswordDTO dto) {
+        try {
+            String message = authService.activateAccount(dto);
+            return ResponseEntity.ok(ApiResponse.<String>builder()
+                    .status(HttpStatus.OK.value())
+                    .message(message)
+                    .isError(false)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.<String>builder()
+                    .status(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage())
+                    .isError(true)
+                    .build());
+        }
+    }
+
+    @PostMapping("/set-password")
+    public ResponseEntity<ApiResponse<String>> setPassword(@RequestBody SetPasswordDTO dto) {
+        try {
+            String message = authService.setPassword(dto);
+            return ResponseEntity.ok(ApiResponse.<String>builder()
+                    .status(HttpStatus.OK.value())
+                    .message(message)
+                    .isError(false)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.<String>builder()
+                    .status(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage())
+                    .isError(true)
+                    .build());
+        }
+    }
+
     @PostMapping("/verify-otp")
     public ResponseEntity<ApiResponse<AuthResponseDTO>> verifyOtp(@Valid @RequestBody VerifyOtpRequestDTO dto) {
         try {

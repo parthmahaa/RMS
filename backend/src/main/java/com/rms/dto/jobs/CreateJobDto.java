@@ -31,5 +31,6 @@ public class CreateJobDto {
 
     private Long companyId;
 
-    private List<SkillReqDTO> skillRequirementIds;
+    private List<Long> requiredSkillIds;
+    private List<Long> preferredSkillIds;
 }

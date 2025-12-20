@@ -97,7 +97,7 @@ export const OtpVerificationDialog: React.FC<OtpVerificationDialogProps> = ({ em
             Verify Account
           </Button>
 
-          <div className="text-sm text-center">
+          <div className="text-sm mt-2 text-center">
             <Button
             id="resend"
               onClick={handleResend}

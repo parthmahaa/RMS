@@ -43,41 +43,30 @@ public class JobService {
             throw new RuntimeException("Only recruiters can create jobs");
         }
 
-        userService.validateCompanyInfo(user);
-
         Recruiter recruiter = recruiterRepository.findByUserId(user.getId())
                 .orElseThrow(()-> new IllegalStateException("Recruiter not found"));
+
         Company company = recruiter.getCompany();
         if (company == null) {
             throw new RuntimeException("You must have a company assigned to create a job.");
         }
 
-        Job job = modelMapper.map(dto, Job.class);
-        job.setType(JobType.valueOf(dto.getType().toUpperCase()).toString());
-        job.setStatus(JobStatus.OPEN.toString());
-        job.setPostedAt(LocalDateTime.now());
-        job.setCompany(company);
-        job.setCreatedBy(recruiter);
-        job.setStatus(JobStatus.OPEN.toString());
-        job.setApplications(new ArrayList<>());
-        job.setSkillRequirements(new ArrayList<>());
+        // FETCH SKILLS FROM THE DB BASED ON DTO
+        List<Skill> reqSkills = fetchSkillsByIds(dto.getRequiredSkillIds());
+        List<Skill> prefSkills = fetchSkillsByIds(dto.getPreferredSkillIds());
 
-        if (dto.getSkillRequirementIds() != null) {
-            Job finalJob = job;
-            dto.getSkillRequirementIds().forEach(reqDto -> {
-                Skill skill = skillRepository.findById(reqDto.getSkillId())
-                        .orElseThrow(() -> new RuntimeException("Skill not found: " + reqDto.getSkillId()));
-
-                JobSkillRequirement req = JobSkillRequirement.builder()
-                        .skill(skill)
-                        .job(finalJob)
-                        .mandatory(reqDto.isMandatory())
-                        .level(reqDto.getLevel() != null ? reqDto.getLevel() : SkillType.INTERMEDIATE)
-                        .yearsOfExperience(reqDto.getYearsOfExperience())
-                        .build();
-                finalJob.getSkillRequirements().add(req);
-            });
-        }
+        Job job = Job.builder()
+                .position(dto.getPosition())
+                .description(dto.getDescription())
+                .createdBy(recruiter)
+                .location(dto.getLocation())
+                .type(dto.getType())
+                .status(JobStatus.OPEN)
+                .company(company)
+                .postedAt(LocalDateTime.now())
+                .requiredSkills(reqSkills)
+                .preferredSkills(prefSkills)
+                .build();
 
         job = jobRepository.save(job);
         return mapToDto(job);
@@ -94,46 +83,38 @@ public class JobService {
             throw new RuntimeException("Only recruiters can update jobs");
         }
 
-        userService.validateCompanyInfo(user);
-
-        modelMapper.map(dto, job);
+//        userService.validateCompanyInfo(user);
 
         Recruiter recruiter = recruiterRepository.findByUserId(user.getId())
                 .orElseThrow(()-> new IllegalStateException("Recruiter not found"));
 
+        // VALIDATE JOB FOR CLOSED COMMENT IF SET TO CLOSED
         if (dto.getStatus() != null) {
             JobStatus newStatus = JobStatus.valueOf(dto.getStatus().toUpperCase());
             if (newStatus == JobStatus.CLOSED) {
                 validateJobClosure(dto);
             }
-            job.setStatus(newStatus.toString());
+            job.setStatus(newStatus);
         }
         if (dto.getType() != null) {
             job.setType(JobType.valueOf(dto.getType().toUpperCase()).toString());
         }
 
-        if (dto.getSkillRequirementIds() != null) {
-            job.getSkillRequirements().clear();
-            jobSkillRequirementRepository.deleteById(job.getId());
+        if (dto.getPosition() != null) job.setPosition(dto.getPosition());
+        if (dto.getDescription() != null) job.setDescription(dto.getDescription());
+        if (dto.getLocation() != null) job.setLocation(dto.getLocation());
+        if (dto.getCloseReason() != null) job.setCloseReason(dto.getCloseReason());
+        if (dto.getSelectedCandidateIds() != null) job.setSelectedCandidateIds(dto.getSelectedCandidateIds());
 
-            Job finalJob = job;
-            dto.getSkillRequirementIds().forEach(reqDto -> {
-                Skill skill = skillRepository.findById(reqDto.getSkillId())
-                        .orElseThrow(() -> new RuntimeException("Skill not found: " + reqDto.getSkillId()));
-
-                JobSkillRequirement req = JobSkillRequirement.builder()
-                        .skill(skill)
-                        .job(finalJob)
-                        .mandatory(reqDto.isMandatory())
-                        .level(reqDto.getLevel() != null ? reqDto.getLevel() : SkillType.INTERMEDIATE)
-                        .yearsOfExperience(reqDto.getYearsOfExperience()) // <-- SETTING NEW FIELD
-                        .build();
-                finalJob.getSkillRequirements().add(req);
-            });
+        if (dto.getRequiredSkillIds() != null) {
+            job.setRequiredSkills(fetchSkillsByIds(dto.getRequiredSkillIds()));
+        }
+        if (dto.getPreferredSkillIds() != null) {
+            job.setPreferredSkills(fetchSkillsByIds(dto.getPreferredSkillIds()));
         }
 
-        job = jobRepository.save(job);
-        return mapToDto(job);
+        Job savedJob = jobRepository.save(job);
+        return mapJobToDto(savedJob);
     }
 
     public List<JobDTO> getOpenJobs() {
@@ -166,7 +147,7 @@ public class JobService {
         }
 
         // 6. Apply changes and save
-        job.setStatus(JobStatus.CLOSED.toString());
+        job.setStatus(JobStatus.CLOSED);
         job.setCloseReason(dto.getCloseReason());
 
         if (hasSelectedCandidates) {
@@ -219,6 +200,8 @@ public class JobService {
         return mapToDto(job);
     }
 
+
+    // ========================== HELPER METHOD ============================
     private void validateJobClosure(UpdateJobDto dto) {
         boolean hasComment = dto.getCloseComment() != null && !dto.getCloseComment().trim().isEmpty();
         boolean hasReason = dto.getCloseReason() != null && !dto.getCloseReason().trim().isEmpty();
@@ -229,18 +212,73 @@ public class JobService {
         }
     }
 
+    private List<Skill> fetchSkillsByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return skillRepository.findAllById(ids);
+    }
+
+    private JobDTO mapJobToDto(Job job) {
+        JobDTO dto = modelMapper.map(job, JobDTO.class);
+        dto.setCompanyName(job.getCompany().getName());
+        dto.setCreatedById(job.getCreatedBy().getId());
+
+        // Map Entities -> SkillReqDTO
+        dto.setRequiredSkills(job.getRequiredSkills().stream()
+                .map(skill -> mapSkillToReqDto(skill, true))
+                .collect(Collectors.toList()));
+
+        dto.setPreferredSkills(job.getPreferredSkills().stream()
+                .map(skill -> mapSkillToReqDto(skill, false))
+                .collect(Collectors.toList()));
+
+        if (job.getApplications() != null) {
+            dto.setApplications(job.getApplications().stream()
+                    .map(this::mapApplicationToDto)
+                    .collect(Collectors.toList()));
+        }
+
+        return dto;
+    }
+    private SkillReqDTO mapSkillToReqDto(Skill skill, boolean isMandatory) {
+        return SkillReqDTO.builder()
+                .skillId(skill.getId())
+                .skillName(skill.getName())
+                .mandatory(isMandatory)
+                .build();
+    }
+
     private JobDTO mapToDto(Job job) {
         JobDTO dto = modelMapper.map(job, JobDTO.class);
         dto.setCompanyName(job.getCompany().getName());
         dto.setCreatedById(job.getCreatedBy().getId());
         dto.setType(job.getType() != null ? job.getType() : null);
-        dto.setStatus(job.getStatus() != null ? job.getStatus() : null);
+        dto.setStatus(job.getStatus() != null ? job.getStatus().toString() : null);
 
-        dto.setSkillRequirements(job.getSkillRequirements().stream()
-                .map(this::mapSkillRequirementToDto)
-                .collect(Collectors.toList()));
+        if (job.getRequiredSkills() != null) {
+            dto.setRequiredSkills(job.getRequiredSkills().stream()
+                    .map(skill -> mapSkillToReqDto(skill, true))
+                    .collect(Collectors.toList()));
+        } else {
+            dto.setRequiredSkills(new ArrayList<>());
+        }
 
-        dto.setApplications(job.getApplications().stream().map(this::mapApplicationToDto).collect(Collectors.toList()));
+        if (job.getPreferredSkills() != null) {
+            dto.setPreferredSkills(job.getPreferredSkills().stream()
+                    .map(skill -> mapSkillToReqDto(skill, false))
+                    .collect(Collectors.toList()));
+        } else {
+            dto.setPreferredSkills(new ArrayList<>());
+        }
+
+        if (job.getApplications() != null) {
+            dto.setApplications(job.getApplications().stream()
+                    .map(this::mapApplicationToDto)
+                    .collect(Collectors.toList()));
+        } else {
+            dto.setApplications(new ArrayList<>());
+        }
 
         dto.setCloseReason(job.getCloseReason());
         dto.setSelectedCandidateIds(job.getSelectedCandidateIds());
@@ -256,15 +294,4 @@ public class JobService {
         dto.setRecruiterComment(app.getRecruiterComment());
         return dto;
     }
-
-    private SkillReqDTO mapSkillRequirementToDto(JobSkillRequirement req) {
-        return SkillReqDTO.builder()
-                .skillId(req.getSkill().getId())
-                .skillName(req.getSkill().getName())
-                .yearsOfExperience(req.getYearsOfExperience())
-                .level(req.getLevel())
-                .mandatory(req.isMandatory())
-                .build();
-    }
-
 }

@@ -4,7 +4,7 @@ import type { FormComponentError } from "../../Types/types";
 
 const Input = forwardRef<
 	HTMLInputElement,
-	TextFieldProps & Partial<FormComponentError> & { id: string }
+	TextFieldProps & Partial<FormComponentError> & { id?: string }
 >(
 	(
 		{

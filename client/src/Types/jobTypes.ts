@@ -33,16 +33,19 @@ export interface Job {
   selectedCandidateIds: number[];
   companyName: string;
   createdById: number;
-  skillRequirementIds: number[];
+  requiredSkills: SkillDto[]; // Minimum required skills
+  preferredSkills: SkillDto[]; // All preferred skills
   applications: JobApplication[];
 }
 
 export interface JobFormData {
   position: string;
   description: string;
+  status: string;
   location: string;
   type: string;
-  skillRequirementIds: number[];
+  requiredSkillIds: number[]; // Minimum required skills
+  preferredSkillIds: number[]; // All preferred skills
 }
 
 // Props types
@@ -52,6 +55,12 @@ export interface JobCardProps {
   onClose: (jobId: number) => void;
   onView: (jobId: number) => void;
   onEdit: (jobId: number) => void;
+}
+
+export interface SkillDto {
+  skillId: number;
+  skillName: string;
+  mandatory?: boolean;
 }
 
 export interface JobFormProps {

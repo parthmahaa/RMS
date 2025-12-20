@@ -9,6 +9,11 @@ import FormSection from '../../Components/ui/FormSection';
 import type { JobFormProps, JobFormData, Skill } from '../../Types/jobTypes';
 import api from '../../utils/api';
 
+interface SkillOption {
+  id: number;
+  name: string;
+}
+
 const JobForm = ({ jobId, initialData, onSuccess, onCancel }: JobFormProps) => {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [loadingSkills, setLoadingSkills] = useState(false);
@@ -21,11 +26,14 @@ const JobForm = ({ jobId, initialData, onSuccess, onCancel }: JobFormProps) => {
       description: initialData?.description || '',
       location: initialData?.location || '',
       type: initialData?.type || 'FULL_TIME',
-      skillRequirementIds: initialData?.skillRequirementIds || []
-    }
+      requiredSkillIds: initialData?.requiredSkills?.map(s => s.skillId) || [],
+      preferredSkillIds: initialData?.preferredSkills?.map(s => s.skillId) || [],
+    },
+    mode: 'onChange'
   });
 
-  const selectedSkillIds = watch('skillRequirementIds');
+  const selectedRequiredSkillIds = watch('requiredSkillIds');
+  const selectedPreferredSkillIds = watch('preferredSkillIds');
 
   useEffect(() => {
     fetchSkills();
@@ -58,7 +66,13 @@ const JobForm = ({ jobId, initialData, onSuccess, onCancel }: JobFormProps) => {
     }
   };
 
-  const selectedSkills = skills.filter(skill => selectedSkillIds.includes(skill.id));
+  const getSelectedSkills = (ids: number[]) => {
+    if (!ids) return [];
+    return skills.filter(s => ids.includes(s.id));
+  };
+
+  const selectedRequiredSkills = skills.filter(skill => selectedRequiredSkillIds.includes(skill.id));
+  const selectedPreferredSkills = skills.filter(skill => selectedPreferredSkillIds.includes(skill.id));
 
   return (
     <Box className="max-w-4xl mx-auto">
@@ -160,35 +174,45 @@ const JobForm = ({ jobId, initialData, onSuccess, onCancel }: JobFormProps) => {
           />
         </FormSection>
 
-        <FormSection title="Required Skills">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Skills *
-            </label>
-            {loadingSkills ? (
-              <Box className="flex justify-center py-8">
-                <CircularProgress size={24} />
-                <Typography variant="body2" className="ml-3 text-gray-600">
-                  Loading skills...
-                </Typography>
-              </Box>
-            ) : (
-              <AutocompleteWoControl<Skill, true, false, false>
-                id="skills"
-                multiple
+        <FormSection title="Skills & Requirements">
+          <div className="space-y-4">
+            
+            {/* Required Skills */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Required Skills (Mandatory)
+              </label>
+              <AutocompleteWoControl
                 options={skills}
-                getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
-                value={selectedSkills}
-                onChange={(_event, newValue) => {
-                  const skillIds = Array.isArray(newValue) 
-                    ? newValue.map(s => typeof s === 'string' ? 0 : s.id).filter(id => id !== 0)
-                    : [];
-                  setValue('skillRequirementIds', skillIds);
+                getOptionLabel={(option: SkillOption) => option.name}
+                multiple
+                value={getSelectedSkills(selectedRequiredSkillIds)}
+                onChange={(_event, newValue: SkillOption[]) => {
+                  const ids = newValue.map(s => s.id);
+                  setValue('requiredSkillIds', ids);
                 }}
-                error={!!errors.skillRequirementIds}
-                helperText={errors.skillRequirementIds?.message || 'Select the skills required for this position'}
+                label="Select required skills"
               />
-            )}
+            </div>
+
+            {/* Preferred Skills */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Preferred Skills (Good to have)
+              </label>
+              <AutocompleteWoControl
+                options={skills}
+                getOptionLabel={(option: SkillOption) => option.name}
+                multiple
+                value={getSelectedSkills(selectedPreferredSkillIds)}
+                onChange={(_event, newValue: SkillOption[]) => {
+                  const ids = newValue.map(s => s.id);
+                  setValue('preferredSkillIds', ids);
+                }}
+                label="Select preferred skills"
+              />
+            </div>
+
           </div>
         </FormSection>
 

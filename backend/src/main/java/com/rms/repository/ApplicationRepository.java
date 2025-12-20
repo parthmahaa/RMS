@@ -1,6 +1,9 @@
 package com.rms.repository;
 
+import com.rms.constants.ApplicationStatus;
 import com.rms.entity.Applications;
+import com.rms.entity.Candidate;
+import com.rms.entity.Job;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,4 +17,8 @@ public interface ApplicationRepository extends JpaRepository<Applications,Long> 
     List<Applications> findByJobId(Long jobId);
 
     List<Applications> findByCandidateId(Long candidateId);
+
+    boolean existsByJobAndCandidate(Job job, Candidate candidate);
+
+    List<Applications> findByCandidateIdAndStatus(Long candidateId, ApplicationStatus status);
 }

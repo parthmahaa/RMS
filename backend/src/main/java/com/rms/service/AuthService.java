@@ -1,6 +1,7 @@
 // java
 package com.rms.service;
 
+import com.rms.constants.UserStatus;
 import com.rms.dto.auth.*;
 import com.rms.constants.RoleType;
 import com.rms.entity.*;
@@ -37,6 +38,15 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     public AuthResponseDTO login(LoginRequestDTO dto) {
+        UserEntity user = userRepo.findByEmail(dto.getEmail())
+                .orElseThrow(() -> new BadCredentialsException("Invalid email or password."));
+
+        if (user.getStatus() == UserStatus.INVITED) {
+            generateAndSendOtp(user);
+
+            throw new BadCredentialsException("INVITED_USER");
+        }
+
         Authentication authentication;
         try {
             authentication = authenticationManager.authenticate(
@@ -46,17 +56,59 @@ public class AuthService {
             throw new BadCredentialsException("Invalid email or password.");
         }
 
-        UserEntity user = (UserEntity) authentication.getPrincipal();
+        UserEntity userDetails = (UserEntity) authentication.getPrincipal();
+        String jwt = authUtil.generateAccessToken(userDetails);
 
-        if (!user.isVerified()) {
-            resendOtp(new ResendOtpRequestDTO(user.getEmail()));
-            throw new BadCredentialsException("Account is not verified. A new OTP has been sent to your email.");
+        return new AuthResponseDTO(jwt,userDetails.getId(),userDetails.getName(),userDetails.getEmail(),userDetails.getRoles(), userDetails.isProfileComplete());
+    }
+
+    @Transactional
+    public String setPassword(SetPasswordDTO dto) {
+        UserEntity user = userRepo.findByEmail(dto.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("User not found."));
+
+        if (user.getStatus() != UserStatus.INVITED) {
+            throw new IllegalArgumentException("User is already active or invalid status.");
         }
 
-        boolean isProfileComplete = getProfileStatus(user);
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setStatus(UserStatus.ACTIVE);
+        user.setVerified(true);
+        userRepo.save(user);
 
-        String token = authUtil.generateAccessToken(user);
-        return new AuthResponseDTO(token, user.getId(), user.getName(), user.getEmail(), user.getRoles(), isProfileComplete);
+        return "Password set successfully. You can now login.";
+    }
+
+    public String activateAccount(SetPasswordDTO dto) {
+        UserEntity user = userRepo.findByEmail(dto.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("User not found."));
+
+        if (user.getStatus() != UserStatus.INVITED) {
+            throw new IllegalArgumentException("User is already active.");
+        }
+
+        if (user.getOtp() == null || !user.getOtp().equals(dto.getOtp())) {
+            throw new IllegalArgumentException("Invalid or expired OTP.");
+        }
+
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setStatus(UserStatus.ACTIVE);
+        user.setVerified(true);
+        user.setOtp(null);
+
+        userRepo.save(user);
+
+        return "Account activated successfully. You can now login.";
+    }
+
+    private void generateAndSendOtp(UserEntity user) {
+        String otp = String.format("%06d", new Random().nextInt(999999));
+        user.setOtp(otp);
+        userRepo.save(user);
+
+        String subject = "Account Activation OTP";
+        String body = "Your OTP for account activation is: " + otp;
+        emailService.sendOtpAsync(user.getEmail(), subject, body);
     }
 
     @Transactional
@@ -114,13 +166,6 @@ public class AuthService {
             } catch (Exception e) {
                 throw new IllegalArgumentException("Invalid email address format.");
             }
-
-//            Company company = companyRepository.findByWebsiteContaining(emailDomain)
-//                    .orElseThrow(() -> new IllegalArgumentException(
-//                            "Your company is not registered for domain '" + emailDomain + "'. " +
-//                                    "Please contact an admin to register your company."
-//                    ));
-
             UserEntity savedUser = userRepo.save(user);
 
             Recruiter recruiter = Recruiter.builder()

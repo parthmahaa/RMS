@@ -18,7 +18,8 @@ const CandidateJobDetails = ({ jobId, onBack, hasApplied }: CandidateJobDetailsP
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [applicationFormOpen, setApplicationFormOpen] = useState(false);
-  const [skills, setSkills] = useState<Array<{ id: number; name: string }>>([]);
+  const [requiredSkills, setRequiredSkills] = useState<Array<{ id: number; name: string }>>([]);
+  const [preferredSkills, setPreferredSkills] = useState<Array<{ id: number; name: string }>>([]);
 
   useEffect(() => {
     fetchJobDetails();
@@ -29,25 +30,29 @@ const CandidateJobDetails = ({ jobId, onBack, hasApplied }: CandidateJobDetailsP
       const response = await api.get(`/jobs/${jobId}`);
       setJob(response.data.data);
 
-      // Fetch skills if skillRequirementIds exist
-      if (response.data.data.skillRequirementIds?.length > 0) {
-        fetchSkills(response.data.data.skillRequirementIds);
+      // Fetch all skills
+      const allSkillsResponse = await api.get('/skills');
+      const allSkills = allSkillsResponse.data.data || [];
+
+      // Filter required skills
+      if (response.data.data.requiredSkills?.length > 0) {
+        const required = allSkills.filter((skill: any) => 
+          response.data.data.requiredSkills.includes(skill.id)
+        );
+        setRequiredSkills(required);
+      }
+
+      // Filter preferred skills
+      if (response.data.data.skillRequirements?.length > 0) {
+        const preferred = allSkills.filter((skill: any) => 
+          response.data.data.skillRequirements.includes(skill.id)
+        );
+        setPreferredSkills(preferred);
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to fetch job details');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchSkills = async (skillIds: number[]) => {
-    try {
-      const response = await api.get('/skills');
-      const allSkills = response.data.data || [];
-      const jobSkills = allSkills.filter((skill: any) => skillIds.includes(skill.id));
-      setSkills(jobSkills);
-    } catch (error) {
-      console.error('Failed to fetch skills');
     }
   };
 
@@ -130,22 +135,48 @@ const CandidateJobDetails = ({ jobId, onBack, hasApplied }: CandidateJobDetailsP
           <p className="text-gray-700 whitespace-pre-line leading-relaxed">{job.description}</p>
         </div>
 
-        {skills.length > 0 && (
-          <>
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-3">Required Skills</h3>
-              <div className="flex flex-wrap gap-2">
-                {skills.map((skill) => (
-                  <span
-                    key={skill.id}
-                    className="px-3 py-1 border border-blue-300 text-blue-700 bg-blue-50 rounded-lg text-sm font-medium"
-                  >
-                    {skill.name}
-                  </span>
-                ))}
-              </div>
+        {/* Required Skills */}
+        {requiredSkills.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              Minimum Required Skills
+            </h3>
+            <Typography variant="body2" className="text-gray-600 mb-3">
+              You must have these skills to be considered for this position
+            </Typography>
+            <div className="flex flex-wrap gap-2">
+              {requiredSkills.map((skill) => (
+                <span
+                  key={skill.id}
+                  className="px-3 py-1 border border-red-300 text-red-700 bg-red-50 rounded-lg text-sm font-medium"
+                >
+                  {skill.name} *
+                </span>
+              ))}
             </div>
-          </>
+          </div>
+        )}
+
+        {/* Preferred Skills */}
+        {preferredSkills.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+              Preferred Skills
+            </h3>
+            <Typography variant="body2" className="text-gray-600 mb-3">
+              Additional skills that would be beneficial
+            </Typography>
+            <div className="flex flex-wrap gap-2">
+              {preferredSkills.map((skill) => (
+                <span
+                  key={skill.id}
+                  className="px-3 py-1 border border-blue-300 text-blue-700 bg-blue-50 rounded-lg text-sm font-medium"
+                >
+                  {skill.name}
+                </span>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* Application Status */}
