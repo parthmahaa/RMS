@@ -36,6 +36,7 @@ const Applications = () => {
       'REJECTED': 'error',
       'PENDING': 'warning',
       'REVIEWED': 'info',
+      'LINKED' : 'info',
       'UNDER_REVIEW': 'info'
     };
     return colorMap[status] || 'default';
@@ -47,6 +48,7 @@ const Applications = () => {
       'REJECTED': <Cancel fontSize="small" />,
       'PENDING': <HourglassEmpty fontSize="small" />,
       'REVIEWED': <RateReview fontSize="small" />,
+      'LINKED : ': <Visibility fontSize="small" />,
       'UNDER_REVIEW': <RateReview fontSize="small" />
     };
     return iconMap[status] || null;
@@ -58,7 +60,8 @@ const Applications = () => {
       'ACCEPTED': 'Accepted',
       'REJECTED': 'Rejected',
       'REVIEWED': 'Under Review',
-      'UNDER_REVIEW': 'Under Review'
+      'UNDER_REVIEW': 'Under Review',
+      'LINKED' : 'Linked'
     };
     return statusMap[status] || status;
   };

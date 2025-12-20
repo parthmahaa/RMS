@@ -1,15 +1,11 @@
 package com.rms.service;
 
+import com.rms.constants.ApplicationStatus;
 import com.rms.constants.RoleType;
 import com.rms.constants.UserStatus;
-import com.rms.entity.Candidate;
-import com.rms.entity.Recruiter;
-import com.rms.entity.UserEntity;
-import com.rms.entity.UserSkills;
-import com.rms.repository.CandidateRepository;
-import com.rms.repository.RecruiterRepository;
-import com.rms.repository.UserRepo;
-import com.rms.repository.UserSkillsRepository;
+import com.rms.entity.*;
+import com.rms.repository.*;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -19,9 +15,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Iterator;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -32,6 +28,9 @@ public class RecruiterService {
     private final CandidateRepository candidateRepository;
     private final UserSkillsRepository userSkillsRepository;
     private final RecruiterRepository recruiterRepository;
+    private final JobRepository jobRepository;
+    private final NotificationRepository notificationRepository;
+    private final ApplicationRepository applicationRepository;
 
     private static final String[] EXPECTED_HEADERS = {
             "Name", "Email", "Phone", "Experience", "Location",
@@ -143,6 +142,71 @@ public class RecruiterService {
         }
     }
 
+    // TO LINK CANDIDATES TO OPEN POSITIONS BASED ON REQ SKILLS == CANDIDATE SKILLS
+    @Transactional
+    public String autoMatchCandidates(Long jobId, Long userId) {
+        Recruiter recruiter = recruiterRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Recruiter not found"));
+
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new IllegalArgumentException("Job not found"));
+
+        if (!job.getCompany().getId().equals(recruiter.getCompany().getId())) {
+            throw new IllegalArgumentException("Permission Denied: You do not own this job.");
+        }
+
+        Set<Long> requiredSkillIds = job.getRequiredSkills().stream()
+                .map(Skill::getId)
+                .collect(Collectors.toSet());
+
+        if (requiredSkillIds.isEmpty()) {
+            throw new IllegalArgumentException("Job has no required skills defined.");
+        }
+
+        Set<Long> preferredSkillIds = job.getPreferredSkills().stream()
+                .map(Skill::getId)
+                .collect(Collectors.toSet());
+
+        List<Candidate> candidates = candidateRepository.findAll();
+        int matchesFound = 0;
+
+        for (Candidate candidate : candidates) {
+
+            if (applicationRepository.existsByJobAndCandidate(job, candidate)) {
+                continue;
+            }
+
+            Set<Long> candidateSkillIds = candidate.getUserSkills().stream()
+                    .map(userSkill -> userSkill.getSkill().getId())
+                    .collect(Collectors.toSet());
+
+            if (candidateSkillIds.containsAll(requiredSkillIds)) {
+                Applications application = Applications.builder()
+                        .job(job)
+                        .candidate(candidate)
+                        .status(ApplicationStatus.LINKED)
+                        .appliedAt(LocalDateTime.now())
+                        .recruiterComment("Auto-Matched via System")
+                        .build();
+
+                applicationRepository.save(application);
+
+                // 7. FEEDBACK (Notify)
+                Notification notification = Notification.builder()
+                        .recipient(candidate.getUser())
+                        .message("Congratulations! You matched a new position: " + job.getPosition())
+                        .relatedJobId(job.getId())
+                        .createdAt(LocalDateTime.now())
+                        .isRead(false)
+                        .build();
+
+                notificationRepository.save(notification);
+                matchesFound++;
+            }
+        }
+
+        return "Auto-match complete. Linked " + matchesFound + " candidates.";
+    }
 
     /*================= HELPER METHODS =================*/
 

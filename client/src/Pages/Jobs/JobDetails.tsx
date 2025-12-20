@@ -1,6 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Box, Chip, CircularProgress, Typography, Divider } from '@mui/material';
-import { ArrowBack, Edit, Close, Delete, LocationOn, CalendarToday, Business, Description, CheckCircle, Star } from '@mui/icons-material';
+import { 
+  ArrowBack, 
+  Edit, 
+  Close, 
+  Delete, 
+  LocationOn, 
+  CalendarToday, 
+  Business, 
+  Description, 
+  CheckCircle, 
+  Star,
+} from '@mui/icons-material';
 import { toast } from 'sonner';
 import Button from '../../Components/ui/Button';
 import ConfirmDialog from '../../Components/ui/ConfirmDialog';
@@ -17,6 +28,7 @@ interface JobDetailsProps {
 const JobDetails = ({ jobId, onBack, onEdit }: JobDetailsProps) => {
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
+  const [matching, setMatching] = useState(false);
   const [confirmData, setConfirmData] = useState<{
     open: boolean;
     action: 'delete' | 'close' | null;
@@ -38,6 +50,20 @@ const JobDetails = ({ jobId, onBack, onEdit }: JobDetailsProps) => {
     }
   };
 
+  const handleAutoMatch = async () => {
+    if (!job) return;
+    setMatching(true);
+    try {
+      const response = await api.post(`/recruiter/jobs/${job.id}/auto-match`);
+      toast.success(response.data.message || 'Auto-match completed successfully');
+      fetchJobDetails(); 
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Auto-match failed');
+    } finally {
+      setMatching(false);
+    }
+  };
+
   const handleConfirmAction = async () => {
     if (!confirmData.action || !job) return;
 
@@ -47,10 +73,9 @@ const JobDetails = ({ jobId, onBack, onEdit }: JobDetailsProps) => {
         toast.success('Job deleted successfully');
         onBack();
       } else if (confirmData.action === 'close') {
-        // Note: You might want to open a dialog to capture closeReason here
         await api.put(`/jobs/${job.id}/status`, { status: 'CLOSED', closeReason: 'Closed by recruiter' });
         toast.success('Job closed successfully');
-        fetchJobDetails(); // Refresh
+        fetchJobDetails(); 
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || `Failed to ${confirmData.action} job`);
@@ -105,7 +130,23 @@ const JobDetails = ({ jobId, onBack, onEdit }: JobDetailsProps) => {
             </div>
           </div>
         </div>
+        
         <div className="flex gap-2">
+            {job.status === 'OPEN' && (
+              <Button
+                id="auto-match-btn"
+                variant="contained"
+                onClick={handleAutoMatch}
+                disabled={matching}
+                sx={{ 
+                  backgroundColor: 'black', 
+                  '&:hover': { backgroundColor: '#333' } 
+                }}
+              >
+                {matching ? 'Matching...' : 'Auto-Match Candidates'}
+              </Button>
+            )}
+
             <Button
                 id="edit-job"
                 variant="outlined"
@@ -158,7 +199,8 @@ const JobDetails = ({ jobId, onBack, onEdit }: JobDetailsProps) => {
             {/* Mandatory Skills */}
             <div className="border border-red-100 bg-red-50/30 rounded-xl p-5">
                 <h4 className="text-sm font-bold text-red-900 mb-3 flex items-center gap-2">
-                    Required Skills   
+                    <CheckCircle className="text-red-600" fontSize="small" />
+                    Required Skills
                 </h4>
                 <div className="flex flex-wrap gap-2">
                     {job.requiredSkills && job.requiredSkills.length > 0 ? (
@@ -179,6 +221,7 @@ const JobDetails = ({ jobId, onBack, onEdit }: JobDetailsProps) => {
             {/* Preferred Skills */}
             <div className="border border-blue-100 bg-blue-50/30 rounded-xl p-5">
                 <h4 className="text-sm font-bold text-blue-900 mb-3 flex items-center gap-2">
+                    <Star className="text-blue-600" fontSize="small" />
                     Preferred Skills
                 </h4>
                 <div className="flex flex-wrap gap-2">

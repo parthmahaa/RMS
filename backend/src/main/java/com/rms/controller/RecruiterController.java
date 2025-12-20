@@ -8,10 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
@@ -44,6 +41,21 @@ public class RecruiterController {
                     .message("Upload failed: " + e.getMessage())
                     .isError(true)
                     .build());
+        }
+    }
+
+    @PostMapping("/jobs/{jobId}/auto-match")
+    public ResponseEntity<ApiResponse<String>> autoMatch(
+            @PathVariable Long jobId,
+            @AuthenticationPrincipal UserEntity currentUser) {
+
+        try {
+            String result = recruiterService.autoMatchCandidates(jobId, currentUser.getId());
+            return ResponseEntity.ok(ApiResponse.<String>builder()
+                    .status(200).message(result).isError(false).build());
+        } catch (Exception e) {
+            return ResponseEntity.status(400).body(ApiResponse.<String>builder()
+                    .status(400).message(e.getMessage()).isError(true).build());
         }
     }
 }
