@@ -5,14 +5,8 @@ import com.rms.constants.JobStatus;
 import com.rms.constants.RoleType;
 import com.rms.dto.jobs.ApplicationStatusUpdateDto;
 import com.rms.dto.jobs.JobApplicationDto;
-import com.rms.entity.Applications;
-import com.rms.entity.Candidate;
-import com.rms.entity.Job;
-import com.rms.entity.UserEntity;
-import com.rms.repository.ApplicationRepository;
-import com.rms.repository.CandidateRepository;
-import com.rms.repository.JobRepository;
-import com.rms.repository.UserRepo;
+import com.rms.entity.*;
+import com.rms.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -31,8 +25,10 @@ public class ApplicationService {
     private final JobRepository jobRepository;
     private final CandidateRepository candidateRepository;
     private final UserRepo userRepository;
+    private final RecruiterRepository recruiterRepository;
     private final ModelMapper modelMapper;
 
+    //===================== APPLY FOR A JOB =================
     @Transactional
     public JobApplicationDto applyToJob(JobApplicationDto dto) {
         Job job = jobRepository.findById(dto.getJobId()).orElseThrow(() -> new RuntimeException("Job not found"));
@@ -53,7 +49,8 @@ public class ApplicationService {
         application.setCandidate(candidate);
         application.setAppliedAt(LocalDateTime.now());
         application.setStatus(ApplicationStatus.PENDING);
-
+        application.setResumeFilePath(dto.getResumeFilePath());
+        application.setCoverLetter(dto.getCoverLetter());
         application = applicationRepository.save(application);
 
         job.getApplications().add(application);
@@ -64,13 +61,29 @@ public class ApplicationService {
         return mapToDto(application);
     }
 
+    //================ GET ALL APPLICATIONS FOR A JOB =================
     public List<JobApplicationDto> getApplicationsByJob(Long jobId) {
-        // ... (No changes needed) ...
         return applicationRepository.findByJobId(jobId).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
 
+    // ================== GET A SPECIFIC APPLICATION DETAILS =========================
+    public JobApplicationDto getApplicationById(Long applicationId) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Recruiter recruiter = recruiterRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new RuntimeException("Recruiter profile not found"));
+
+        Applications app = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new RuntimeException("Application not found"));
+
+        return mapToDto(app);
+    }
+
+    //===================== CANDIDATE APPLICATIONS ====================
     public List<JobApplicationDto> getMyApplications() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         UserEntity user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
@@ -114,6 +127,9 @@ public class ApplicationService {
         JobApplicationDto dto = modelMapper.map(app, JobApplicationDto.class);
         dto.setJobId(app.getJob().getId());
         dto.setCandidateId(app.getCandidate().getId());
+        dto.setCandidateName(app.getCandidate().getUser().getName());
+        dto.setResumeFilePath(app.getResumeFilePath());
+        dto.setCoverLetter(app.getCoverLetter());
         dto.setStatus(app.getStatus() != null ? app.getStatus().name() : null);
         dto.setRecruiterComment(app.getRecruiterComment());
 

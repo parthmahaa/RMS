@@ -15,6 +15,7 @@ public class JobApplicationDto {
     private Long id;
     private Long jobId;
     private Long candidateId;
+    private String candidateName;
     private String coverLetter;
     private String resumeFilePath;
     private LocalDateTime appliedAt;

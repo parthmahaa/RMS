@@ -10,10 +10,10 @@ const useCloudinaryUpload = () => {
     setUploading(true);
     const formData = new FormData();
     formData.append('file', fileToUpload);
-    formData.append('upload_preset', 'snapdrop'); 
+    formData.append('upload_preset', 'recruitment'); 
 
     try {
-      const response = await fetch('https://api.cloudinary.com/v1_1/dhvvqlsjq/upload', {
+      const response = await fetch('https://api.cloudinary.com/v1_1/dhvvqlsjq/raw/upload', {
         method: 'POST',
         body: formData,
       });

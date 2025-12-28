@@ -10,6 +10,7 @@ export interface JobApplication {
   jobId: number;
   candidateId: number;
   appliedAt: string;
+  candidateName: string ;
   recruiterComment: string | null;
   status: string;
   position?: string;

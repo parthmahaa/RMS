@@ -27,6 +27,8 @@ public class Applications {
 
     private String resumeFilePath;
 
+    private String coverLetter;
+
     @ManyToOne
     @JoinColumn(name = "candidate_id", nullable = false)
     private Candidate candidate;
