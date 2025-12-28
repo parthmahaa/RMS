@@ -3,7 +3,6 @@ import { Box, CircularProgress, Typography, TextField, InputAdornment } from '@m
 import { Search } from '@mui/icons-material';
 import { toast } from 'sonner';
 import CandidateJobCard from './Candidate/CandidateJobCard';
-import CandidateJobDetails from './Candidate/CandidateJobDetails';
 import JobApplicationForm from './Candidate/JobApplicationForm';
 import api from '../utils/api';
 import type { Job, JobApplicationFormData } from '../Types/jobTypes';
@@ -45,7 +44,6 @@ const CandidateDashboard = () => {
     }
   };
 
-
   // logic to check if already applied
   const checkAppliedJobs = (jobList: Job[]) => {
     const applied = new Set<number>();
@@ -76,49 +74,6 @@ const CandidateDashboard = () => {
     );
     setFilteredJobs(filtered);
   };
-
-  const handleApply = (jobId: number) => {
-    setApplyingJobId(jobId);
-  };
-
-  const handleSubmitApplication = async (formData: JobApplicationFormData) => {
-    if (!applyingJobId) return;
-
-    try {
-      const response = await api.post(`/application`, formData);
-      toast.success(response.data.message || 'Application submitted successfully!');
-      
-      setAppliedJobIds((prev) => new Set(prev).add(applyingJobId));
-      setApplyingJobId(null);
-      
-      fetchJobs();
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to submit application');
-      throw error;
-    }
-  };
-
-  const handleViewJob = (jobId: number) => {
-    setSelectedJobId(jobId);
-  };
-
-  if (loading) {
-    return (
-      <Box className="flex justify-center items-center py-20">
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (selectedJobId) {
-    return (
-      <CandidateJobDetails
-        hasApplied= {appliedJobIds.has(selectedJobId)}
-        jobId={selectedJobId}
-        onBack={() => setSelectedJobId(null)}
-      />
-    );
-  }
 
   const applyingJob = jobs.find((job) => job.id === applyingJobId);
 
@@ -179,12 +134,6 @@ const CandidateDashboard = () => {
           open={!!applyingJobId}
           job={applyingJob}
           onClose={() => setApplyingJobId(null)}
-          onSubmit={async (data) => {
-            await api.post(`/application`, data);
-            toast.success('Application submitted successfully!');
-            setApplyingJobId(null);
-            fetchJobs();
-          }}
         />
       )}
     </div>

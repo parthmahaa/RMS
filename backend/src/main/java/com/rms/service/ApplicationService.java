@@ -35,11 +35,7 @@ public class ApplicationService {
 
     @Transactional
     public JobApplicationDto applyToJob(JobApplicationDto dto) {
-
         Job job = jobRepository.findById(dto.getJobId()).orElseThrow(() -> new RuntimeException("Job not found"));
-        if (!JobStatus.OPEN.toString().equals(job.getStatus())) {
-            throw new RuntimeException("Job is not open");
-        }
 
         Candidate candidate = candidateRepository.findByUserId(dto.getCandidateId())
                 .orElseThrow(() -> new RuntimeException("Candidate profile not found."));

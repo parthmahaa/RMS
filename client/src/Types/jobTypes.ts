@@ -112,5 +112,4 @@ export interface ApplicationFormProps {
   open: boolean;
   job: Job;
   onClose: () => void;
-  onSubmit: (data: JobApplicationFormData) => Promise<void>;
 }
