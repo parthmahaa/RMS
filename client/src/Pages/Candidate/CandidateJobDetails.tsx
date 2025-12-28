@@ -1,70 +1,62 @@
+//
 import { useEffect, useState } from 'react';
-import { Box, Typography, Chip, CircularProgress, Divider } from '@mui/material';
+import { Box, Typography, CircularProgress, Divider } from '@mui/material';
 import { ArrowBack, CheckCircle, LocationOn, Work, CalendarToday } from '@mui/icons-material';
 import { toast } from 'sonner';
+import { useParams, useNavigate, useLocation } from 'react-router-dom'; // Added Router hooks
 import Button from '../../Components/ui/Button';
 import JobApplicationForm from './JobApplicationForm';
 import api from '../../utils/api';
-import type { Job, JobApplicationFormData } from '../../Types/jobTypes';
+import type { Job } from '../../Types/jobTypes';
 import { formatJobType, formatDate } from '../../utils/jobFormatters';
+import useAuthStore from '../../Store/authStore'; // Needed for ID check
 
-interface CandidateJobDetailsProps {
-  jobId: number;
-  onBack: () => void;
-  hasApplied: boolean
-}
+const CandidateJobDetails = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const userId = useAuthStore((state: any) => state.userId);
 
-const CandidateJobDetails = ({ jobId, onBack, hasApplied }: CandidateJobDetailsProps) => {
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [applicationFormOpen, setApplicationFormOpen] = useState(false);
-  const [requiredSkills, setRequiredSkills] = useState<Array<{ id: number; name: string }>>([]);
-  const [preferredSkills, setPreferredSkills] = useState<Array<{ id: number; name: string }>>([]);
+  const [hasApplied, setHasApplied] = useState(false);
 
   useEffect(() => {
-    fetchJobDetails();
-  }, [jobId]);
+    if (id) {
+      fetchJobAndCheckStatus();
+    }
+  }, [id, userId]);
 
-  const fetchJobDetails = async () => {
+  const fetchJobAndCheckStatus = async () => {
     try {
-      const response = await api.get(`/jobs/${jobId}`);
-      setJob(response.data.data);
-
-      // Fetch all skills
-      const allSkillsResponse = await api.get('/skills');
-      const allSkills = allSkillsResponse.data.data || [];
-
-      // Filter required skills
-      if (response.data.data.requiredSkills?.length > 0) {
-        const required = allSkills.filter((skill: any) => 
-          response.data.data.requiredSkills.includes(skill.id)
-        );
-        setRequiredSkills(required);
+      setLoading(true);
+      const jobResponse = await api.get(`/jobs/${id}`);
+      const jobData: Job = jobResponse.data.data;
+      setJob(jobData);
+      const profileResponse = await api.get('/user/profile');
+      if (profileResponse.data.data && profileResponse.data.data.role.includes('CANDIDATE')) {
+        const candidateId = profileResponse.data.data.id;
+        const isApplied = jobData.applications?.some(app => app.candidateId === candidateId);
+        setHasApplied(isApplied || false);
       }
 
-      // Filter preferred skills
-      if (response.data.data.skillRequirements?.length > 0) {
-        const preferred = allSkills.filter((skill: any) => 
-          response.data.data.skillRequirements.includes(skill.id)
-        );
-        setPreferredSkills(preferred);
-      }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to fetch job details');
+      toast.error(error.response?.data?.message || 'Failed to load job details');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleApply = async (formData: JobApplicationFormData) => {
-    try {
-      const response = await api.post(`/application`, formData);
-      toast.success(response.data.message || 'Application submitted successfully!');
-      setApplicationFormOpen(false);
-    } catch (error: any) {
-      console.error(error.response?.data?.message || 'Failed to submit application');
-      toast.error(error.response?.data?.message || 'Failed to submit application');
-      throw error;
+  const handleBack = () => {
+    if (location.state?.from) {
+      navigate(location.state.from);
+      return;
+    }
+    if (location.pathname.includes('/applications')) {
+      navigate('/applications');
+    } else {
+      navigate('/jobs');
     }
   };
 
@@ -82,8 +74,8 @@ const CandidateJobDetails = ({ jobId, onBack, hasApplied }: CandidateJobDetailsP
         <Typography variant="h6" color="text.secondary">
           Job not found
         </Typography>
-        <Button id="back-to-jobs" variant="outlined" onClick={onBack} className="mt-4">
-          Back to Jobs
+        <Button id="back-to-jobs" variant="outlined" onClick={handleBack} className="mt-4">
+          Back to Dashboard
         </Button>
       </div>
     );
@@ -94,11 +86,11 @@ const CandidateJobDetails = ({ jobId, onBack, hasApplied }: CandidateJobDetailsP
       <Button
         id="back-button"
         variant="outlined"
-        onClick={onBack}
+        onClick={handleBack}
         startIcon={<ArrowBack />}
         className="mb-6"
       >
-        Back to Jobs
+        {location.pathname.includes('/applications') ? 'Back to Applications' : 'Back to Jobs'}
       </Button>
 
       <div className="bg-white rounded-2xl mt-2 border border-gray-200 p-8">
@@ -129,28 +121,22 @@ const CandidateJobDetails = ({ jobId, onBack, hasApplied }: CandidateJobDetailsP
           </div>
         </div>
 
-
         <div className="mb-6">
           <h3 className="text-lg font-semibold text-gray-800 mb-3">Job Description</h3>
           <p className="text-gray-700 whitespace-pre-line leading-relaxed">{job.description}</p>
         </div>
 
         {/* Required Skills */}
-        {requiredSkills.length > 0 && (
+        {job.requiredSkills?.length > 0 && (
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">
-              Minimum Required Skills
-            </h3>
-            <Typography variant="body2" className="text-gray-600 mb-3">
-              You must have these skills to be considered for this position
-            </Typography>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Minimum Required Skills</h3>
             <div className="flex flex-wrap gap-2">
-              {requiredSkills.map((skill) => (
+              {job.requiredSkills.map((skill) => (
                 <span
-                  key={skill.id}
+                  key={skill.skillId}
                   className="px-3 py-1 border border-red-300 text-red-700 bg-red-50 rounded-lg text-sm font-medium"
                 >
-                  {skill.name} *
+                  {skill.skillName}
                 </span>
               ))}
             </div>
@@ -158,21 +144,16 @@ const CandidateJobDetails = ({ jobId, onBack, hasApplied }: CandidateJobDetailsP
         )}
 
         {/* Preferred Skills */}
-        {preferredSkills.length > 0 && (
+        {job.preferredSkills?.length > 0 && (
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">
-              Preferred Skills
-            </h3>
-            <Typography variant="body2" className="text-gray-600 mb-3">
-              Additional skills that would be beneficial
-            </Typography>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Preferred Skills</h3>
             <div className="flex flex-wrap gap-2">
-              {preferredSkills.map((skill) => (
+              {job.preferredSkills.map((skill) => (
                 <span
-                  key={skill.id}
+                  key={skill.skillId}
                   className="px-3 py-1 border border-blue-300 text-blue-700 bg-blue-50 rounded-lg text-sm font-medium"
                 >
-                  {skill.name}
+                  {skill.skillName}
                 </span>
               ))}
             </div>
@@ -185,7 +166,7 @@ const CandidateJobDetails = ({ jobId, onBack, hasApplied }: CandidateJobDetailsP
             <Divider className="my-6" />
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <p className="text-green-800 font-semibold">
-                ✅ You have already applied for this position
+                You have already applied for this position
               </p>
               <p className="text-green-700 mt-1 text-sm">
                 The recruiter will review your application and contact you if you’re shortlisted.
@@ -209,12 +190,10 @@ const CandidateJobDetails = ({ jobId, onBack, hasApplied }: CandidateJobDetailsP
         )}
       </div>
 
-      {/* Application Form Modal */}
       <JobApplicationForm
         open={applicationFormOpen}
         job={job}
         onClose={() => setApplicationFormOpen(false)}
-        onSubmit={handleApply}
       />
     </div>
   );

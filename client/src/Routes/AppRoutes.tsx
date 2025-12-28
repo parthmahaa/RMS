@@ -14,6 +14,7 @@ import Upload from '../Pages/Upload';
 import Interview from '../Pages/Interview';
 import Users from '../Pages/Users';
 import BulkUpload from '../Pages/Recruiter/BulkUpload';
+import CandidateJobDetails from '../Pages/Candidate/CandidateJobDetails';
 const AppRoutes: React.FC = () => {
     const isAuthenticated = useAuthStore((state: any) => state.isAuthenticated);
     const isLoading = useAuthStore((state: any) => state.isLoading);
@@ -41,7 +42,7 @@ const AppRoutes: React.FC = () => {
                     index
                     element={
                         <ProtectedRoute>
-                            <Dashboard/>
+                            <Dashboard />
                         </ProtectedRoute>
                     }
                 />
@@ -49,7 +50,7 @@ const AppRoutes: React.FC = () => {
                     path="dashboard"
                     element={
                         <ProtectedRoute>
-                            <Dashboard/>
+                            <Dashboard />
                         </ProtectedRoute>
                     }
                 />
@@ -57,7 +58,15 @@ const AppRoutes: React.FC = () => {
                     path="jobs"
                     element={
                         <ProtectedRoute>
-                            {roles.includes("CANDIDATE") ? <CandidateDashboard/> : <Jobs />}
+                            {roles.includes("CANDIDATE") ? <CandidateDashboard /> : <Jobs />}
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="jobs/:id"
+                    element={
+                        <ProtectedRoute>
+                            <CandidateJobDetails />
                         </ProtectedRoute>
                     }
                 />
@@ -69,6 +78,11 @@ const AppRoutes: React.FC = () => {
                         </ProtectedRoute>
                     }
                 />
+                <Route path="applications/jobs/:id" element={
+                    <ProtectedRoute>
+                        <CandidateJobDetails />
+                    </ProtectedRoute>
+                } />
                 <Route
                     path="upload"
                     element={
@@ -76,23 +90,23 @@ const AppRoutes: React.FC = () => {
                             {roles.includes("RECRUITER") ? <BulkUpload /> : <Navigate to="/dashboard" replace />}
                         </ProtectedRoute>
                     }
-                    />
+                />
                 <Route
                     path="interviews"
                     element={
                         <ProtectedRoute>
-                            {roles.includes("RECRUITER") ? <Interview /> : <Navigate to="/dashboard" replace />  }
+                            {roles.includes("RECRUITER") ? <Interview /> : <Navigate to="/dashboard" replace />}
                         </ProtectedRoute>
                     }
                 />
                 <Route
                     path="users"
                     element={
-                      <ProtectedRoute>
-                        {roles.includes("ADMIN") ? <Users/> : <Navigate to="/dashboard" replace />}
-                      </ProtectedRoute> 
+                        <ProtectedRoute>
+                            {roles.includes("ADMIN") ? <Users /> : <Navigate to="/dashboard" replace />}
+                        </ProtectedRoute>
                     }
-                    />
+                />
                 <Route
                     path="profile"
                     element={

@@ -97,7 +97,7 @@ const Profile: React.FC = () => {
           degree: candidateData.degree || '',
           currentCompany: candidateData.currentCompany || '',
           resumeFilePath: candidateData.resumeFilePath || '',
-          skills: candidateData.skills?.map(s => ({ value: s.id || s.skillId, label: s.name || 'Loading...' })) || [],
+          skills: candidateData.skills?.map(s => ({ value: s.skillId, label: s.name || 'Loading...' })) || [],
         });
       } else if (profileData.role.includes('RECRUITER')) {
         const recruiterData = profileData as RecruiterProfileDto;
@@ -231,8 +231,8 @@ const Profile: React.FC = () => {
           currentCompany: candidateData.currentCompany || '',
           resumeFilePath: candidateData.resumeFilePath || '',
           skills: candidateData.skills?.map(s => {
-            const master = skillMasterOptions.find(opt => opt.value === (s.id || s.skillId));
-            return { value: s.id || s.skillId, label: master?.label || s.name || '...' };
+            const master = skillMasterOptions.find(opt => opt.value ===  s.skillId);
+            return { value: s.skillId, label: master?.label || s.name || '...' };
           }) || [],
         });
       } else if (updatedProfileData.role.includes('RECRUITER')) {

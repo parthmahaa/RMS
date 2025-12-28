@@ -1,5 +1,5 @@
 package com.rms.constants;
 
 public enum ApplicationStatus {
-    PENDING, REVIEWED, ACCEPTED, REJECTED
+    PENDING, REVIEWED, ACCEPTED, REJECTED, LINKED, HIRED
 }

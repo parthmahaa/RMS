@@ -18,10 +18,10 @@ import java.util.Set;
 public class Candidate{
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY,cascade = CascadeType.ALL, orphanRemoval = true)
+    @MapsId
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private UserEntity user;
 

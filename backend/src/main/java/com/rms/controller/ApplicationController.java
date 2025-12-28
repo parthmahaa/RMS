@@ -62,6 +62,26 @@ public class ApplicationController {
         }
     }
 
+    @GetMapping("/{applicationId}")
+    @PreAuthorize("hasRole('RECRUITER')")
+    public ResponseEntity<ApiResponse<JobApplicationDto>> getApplicationDetails(@PathVariable Long applicationId) {
+        try {
+            JobApplicationDto app = applicationService.getApplicationById(applicationId);
+            return ResponseEntity.ok(ApiResponse.<JobApplicationDto>builder()
+                    .status(HttpStatus.OK.value())
+                    .message("Application details fetched successfully")
+                    .data(app)
+                    .isError(false)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.<JobApplicationDto>builder()
+                    .status(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage())
+                    .isError(true)
+                    .build());
+        }
+    }
+
     @GetMapping("/candidate")
     @PreAuthorize("hasRole('CANDIDATE')")
     public ResponseEntity<ApiResponse<List<JobApplicationDto>>> getApplicationsByCandidate() {

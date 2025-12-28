@@ -15,7 +15,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -141,19 +143,33 @@ public class UserService {
                     .orElseThrow(() -> new RuntimeException("Candidate profile not found."));
 
             modelMapper.map(dto,candidate);
-            candidate.getUserSkills().clear();
             candidate.setBranch(dto.getBranch());
+
+            // to prevent insertion before deletion
+            Set<Long> newSkillIds = (dto.getSkills() != null)
+                    ? dto.getSkills().stream().map(UserSkillDto::getSkillId).collect(Collectors.toSet())
+                    : new HashSet<>();
+
+            candidate.getUserSkills().removeIf(userSkill ->
+                    !newSkillIds.contains(userSkill.getSkill().getId())
+            );
+
+            Set<Long> existingSkillIds = candidate.getUserSkills().stream()
+                    .map(us -> us.getSkill().getId())
+                    .collect(Collectors.toSet());
+
             if (dto.getSkills() != null) {
                 dto.getSkills().forEach(skillDto -> {
-                    Skill skill = skillRepository.findById(skillDto.getSkillId())
-                            .orElseThrow(() -> new RuntimeException("Skill not found with ID: " + skillDto.getSkillId()));
+                    if (!existingSkillIds.contains(skillDto.getSkillId())) {
+                        Skill skill = skillRepository.findById(skillDto.getSkillId())
+                                .orElseThrow(() -> new RuntimeException("Skill not found with ID: " + skillDto.getSkillId()));
 
-                    UserSkills userSkill = UserSkills.builder()
-                            .candidate(candidate)
-                            .skill(skill)
-                            .build();
-
-                    candidate.getUserSkills().add(userSkill);
+                        UserSkills userSkill = UserSkills.builder()
+                                .candidate(candidate)
+                                .skill(skill)
+                                .build();
+                        candidate.addSkill(userSkill);
+                    }
                 });
             }
 

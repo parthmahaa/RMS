@@ -6,9 +6,10 @@ import Input from '../../Components/ui/Input';
 import type { ApplicationFormProps, JobApplicationFormData } from '../../Types/jobTypes';
 import useCloudinaryUpload from '../../Hooks/useCloudinary';
 import useAuthStore from '../../Store/authStore';
+import api from '../../utils/api';
 
-const JobApplicationForm = ({ open, job, onClose, onSubmit }: ApplicationFormProps) => {
-  const user = useAuthStore((state :any) => state);
+const JobApplicationForm = ({ open, job, onClose }: ApplicationFormProps) => {
+  const user = useAuthStore((state: any) => state);
   const [formData, setFormData] = useState<JobApplicationFormData>({
     coverLetter: '',
     resumeFilePath: '',
@@ -17,19 +18,20 @@ const JobApplicationForm = ({ open, job, onClose, onSubmit }: ApplicationFormPro
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { uploading, file, url, handleFileChange, uploadFileToCloudinary } = useCloudinaryUpload();
+  const [uploaded, setUploaded] = useState(false);
+  const { uploading, file, handleFileChange, uploadFileToCloudinary } = useCloudinaryUpload();
 
   useEffect(() => {
-  if (open) {
-    setFormData({
-      coverLetter: '',
-      resumeFilePath: '',
-      jobId: job.id,
-      candidateId: user.userId
-    });
-    setErrors({});
-  }
-}, [open, job.id, user.userId]);
+    if (open) {
+      setFormData({
+        coverLetter: '',
+        resumeFilePath: '',
+        jobId: job.id,
+        candidateId: user.userId
+      });
+      setErrors({});
+    }
+  }, [open, job.id, user.userId]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -38,6 +40,9 @@ const JobApplicationForm = ({ open, job, onClose, onSubmit }: ApplicationFormPro
       newErrors.coverLetter = 'Cover letter is required';
     } else if (formData.coverLetter.trim().length < 10) {
       newErrors.coverLetter = 'Cover letter must be at least 50 characters';
+    }
+    if (!file) {
+      newErrors.resumeFilePath = 'Resume is required';
     }
 
     setErrors(newErrors);
@@ -49,31 +54,40 @@ const JobApplicationForm = ({ open, job, onClose, onSubmit }: ApplicationFormPro
       toast.error('Please fill in all required fields.');
       return;
     }
-
-    setFormData({ ...formData, resumeFilePath: url || '', jobId: job.id });
-
     setLoading(true);
     try {
-      await onSubmit(formData);
-      setErrors({});
+      // upload resume
+      let uploadedResumeUrl = "";
+      if (file) {
+        const resumeUrl = await uploadFileToCloudinary(file);
+        if (!resumeUrl) {
+          toast.error('Resume upload failed.');
+          setLoading(false)
+          return;
+        }
+        uploadedResumeUrl = resumeUrl
+        setUploaded(true)
+      }
+      const payload = {
+        resumeFilePath: uploadedResumeUrl,
+        jobId: job.id,
+        coverLetter: formData.coverLetter,
+        candidateId: user.userId
+      };
+      const response = await api.post('/application', payload);
+
+      toast.success(response.data.message || 'Application submitted successfully!');
       onClose();
     } catch (error) {
+      if(error.response) {
+        toast.error(error.response?.data?.message || 'Failed to submit application');
+      }else{
+        toast.error('Network error. Please check your connection');
+      }
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (url) {
-      setFormData({ ...formData, resumeFilePath: url });
-    }
-  }, [url]);
-
-  useEffect(() => {
-    if (file) {
-      uploadFileToCloudinary(file);
-    }
-  }, [file]);
 
   const handleClose = () => {
     setErrors({});
@@ -113,9 +127,10 @@ const JobApplicationForm = ({ open, job, onClose, onSubmit }: ApplicationFormPro
 
           <div>
             <Typography variant="body2" className="font-medium mb-2">
-              Upload Resume (Optional)
+              Upload Resume 
+              <span className='text-red-500'>*</span>
             </Typography>
-            <Box className="space-y-2">
+            <Box className="space-y-2 mt-1">
               <input
                 type="file"
                 accept=".pdf,.doc,.docx"
@@ -134,9 +149,9 @@ const JobApplicationForm = ({ open, job, onClose, onSubmit }: ApplicationFormPro
                   Uploading resume...
                 </Typography>
               )}
-              {url && (
+              {uploaded && (
                 <Typography variant="body2" className="text-green-600">
-                  ✓ Resume uploaded successfully
+                  Resume uploaded successfully
                 </Typography>
               )}
               <Typography variant="caption" className="text-gray-500">
