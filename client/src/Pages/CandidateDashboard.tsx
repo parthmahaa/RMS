@@ -7,6 +7,7 @@ import JobApplicationForm from './Candidate/JobApplicationForm';
 import api from '../utils/api';
 import type { Job, JobApplicationFormData } from '../Types/jobTypes';
 import useAuthStore from '../Store/authStore';
+import CandidateJobDetails from './Candidate/CandidateJobDetails';
 
 const CandidateDashboard = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -77,6 +78,16 @@ const CandidateDashboard = () => {
 
   const applyingJob = jobs.find((job) => job.id === applyingJobId);
 
+  if (selectedJobId) {
+    return (
+      <CandidateJobDetails
+        jobId={selectedJobId}
+        onBack={() => setSelectedJobId(null)}
+        hasApplied={appliedJobIds.has(selectedJobId)}
+      />
+    );
+  }
+  
   return (
     <div className="max-w-7xl mx-auto ">
       <div className="mb-8">
@@ -102,12 +113,10 @@ const CandidateDashboard = () => {
         />
       </div>
 
-      {/* Job Count */}
       <p className="text-sm text-gray-500 mb-4">
         {filteredJobs.length} {filteredJobs.length === 1 ? 'job' : 'jobs'} found
       </p>
 
-      {/* Tailwind Grid */}
       {filteredJobs.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredJobs.map((job) => (
