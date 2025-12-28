@@ -4,6 +4,7 @@ import { Search } from '@mui/icons-material';
 import { toast } from 'sonner';
 import CandidateJobCard from './Candidate/CandidateJobCard';
 import JobApplicationForm from './Candidate/JobApplicationForm';
+import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import type { Job, JobApplicationFormData } from '../Types/jobTypes';
 import useAuthStore from '../Store/authStore';
@@ -13,7 +14,7 @@ const CandidateDashboard = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
+  const navigate = useNavigate();
   const [applyingJobId, setApplyingJobId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [appliedJobIds, setAppliedJobIds] = useState<Set<number>>(new Set());
@@ -78,15 +79,6 @@ const CandidateDashboard = () => {
 
   const applyingJob = jobs.find((job) => job.id === applyingJobId);
 
-  if (selectedJobId) {
-    return (
-      <CandidateJobDetails
-        jobId={selectedJobId}
-        onBack={() => setSelectedJobId(null)}
-        hasApplied={appliedJobIds.has(selectedJobId)}
-      />
-    );
-  }
   
   return (
     <div className="max-w-7xl mx-auto ">
@@ -124,7 +116,7 @@ const CandidateDashboard = () => {
               key={job.id}
               job={job}
               onApply={() => setApplyingJobId(job.id)}
-              onView={setSelectedJobId}
+              onView={()=> navigate(`/jobs/${job.id}`, {state : {from : '/jobs'}})}
               hasApplied={appliedJobIds.has(job.id)}
             />
           ))}

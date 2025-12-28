@@ -140,7 +140,7 @@ const Applications = () => {
                   id={`view-job-${application.id}`}
                   variant="outlined"
                   size="small"
-                  // onClick={() => navigate(`/jobs/${application.jobId}`)}
+                  onClick={() => navigate(`/applications/jobs/${application.jobId}` , { state: { from: '/applications' } })}
                   startIcon={<Visibility fontSize="small" />}
                   fullWidth
                 >
