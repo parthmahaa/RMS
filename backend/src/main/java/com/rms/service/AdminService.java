@@ -69,14 +69,4 @@ public class AdminService {
         UserEntity savedUser = userRepository.save(user);
         return modelMapper.map(savedUser, UserDTO.class);
     }
-
-    @Transactional
-    public void ensureAdminEntityExists(UserEntity user) {
-        if (user.getRoles().contains(RoleType.ADMIN)) {
-            if (adminRepository.findByUserId(user.getId()).isEmpty()) {
-                Admin admin = Admin.builder().user(user).build();
-                adminRepository.save(admin);
-            }
-        }
-    }
 }

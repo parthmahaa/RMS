@@ -31,7 +31,7 @@ public class UserController {
     private final Logger logger = LoggerFactory.getLogger(UserController.class);
 
     @PutMapping("/company")
-    @PreAuthorize("hasAnyRole('RECRUITTER', 'HR')")
+    @PreAuthorize("hasAnyRole('RECRUITER', 'HR')")
     public ResponseEntity<ApiResponse<CompanyDto>> updateCompany(@Valid @RequestBody CompanyUpdateDto dto) {
         try {
             CompanyDto companyDto = userService.updateCompany(dto);
@@ -52,7 +52,7 @@ public class UserController {
     }
 
     @GetMapping("/company")
-    @PreAuthorize("hasAnyRole('RECRUITTER', 'HR')")
+    @PreAuthorize("hasAnyRole('RECRUITER', 'HR')")
     public ResponseEntity<ApiResponse<CompanyDto>> getMyCompany() {
         try {
             CompanyDto companyDto = userService.getMyCompany();
