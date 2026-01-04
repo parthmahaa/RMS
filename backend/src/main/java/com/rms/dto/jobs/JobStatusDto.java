@@ -5,7 +5,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class JobCloseDto {
+public class JobStatusDto {
     private String closeReason;
     private List<Long> selectedCandidateIds;
 }
