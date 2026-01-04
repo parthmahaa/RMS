@@ -1,11 +1,13 @@
 package com.rms.dto.jobs;
 
+import com.rms.entity.Skill;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -19,9 +21,10 @@ public class JobApplicationDto {
     private String coverLetter;
     private String resumeFilePath;
     private LocalDateTime appliedAt;
+    private List<Skill> candidateSkills;
     private String recruiterComment;
     private String status;
-
+    private Long candidateExperience;  // YOE a candidate has
     private String position;
     private String companyName;
     private String location;

@@ -26,12 +26,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class JobService {
     private final JobRepository jobRepository;
-    private final CompanyRepository companyRepository;
     private final SkillRepository skillRepository;
-    private final JobSkillReqRepository jobSkillRequirementRepository;
     private final UserRepo userRepository;
     private final ModelMapper modelMapper;
-    private final UserService userService;
     private final RecruiterRepository recruiterRepository;
 
     @Transactional
@@ -59,6 +56,7 @@ public class JobService {
                 .position(dto.getPosition())
                 .description(dto.getDescription())
                 .createdBy(recruiter)
+                .yoer(dto.getYoer())
                 .location(dto.getLocation())
                 .type(dto.getType())
                 .status(JobStatus.OPEN)
@@ -101,6 +99,7 @@ public class JobService {
         }
 
         if (dto.getPosition() != null) job.setPosition(dto.getPosition());
+        if(dto.getYoer() !=null) job.setYoer(dto.getYoer());
         if (dto.getDescription() != null) job.setDescription(dto.getDescription());
         if (dto.getLocation() != null) job.setLocation(dto.getLocation());
         if (dto.getCloseReason() != null) job.setCloseReason(dto.getCloseReason());
@@ -124,34 +123,34 @@ public class JobService {
     }
 
     @Transactional
-    public JobDTO closeJob(Long id, JobCloseDto dto) {
+    public JobDTO updateJobStatus(Long id, JobStatusDto dto) {
         Job job = jobRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Job not found"));
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
         Recruiter recruiter = recruiterRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new IllegalStateException("Recruiter profile not found"));
 
 
-        if (JobStatus.CLOSED.toString().equals(job.getStatus())) {
-            throw new RuntimeException("This job is already closed.");
-        }
+        if (dto.getStatus() == JobStatus.CLOSED) {
+            boolean hasSelectedCandidates = dto.getSelectedCandidateIds() != null && !dto.getSelectedCandidateIds().isEmpty();
+            boolean hasReason = dto.getCloseReason() != null && !dto.getCloseReason().trim().isEmpty();
 
-        boolean hasSelectedCandidates = dto.getSelectedCandidateIds() != null && !dto.getSelectedCandidateIds().isEmpty();
-        boolean hasReason = dto.getCloseReason() != null && !dto.getCloseReason().trim().isEmpty();
+            if (!hasSelectedCandidates && !hasReason) {
+                throw new RuntimeException("A close reason is required if no candidates are selected.");
+            }
 
-        if (!hasSelectedCandidates && !hasReason) {
-            throw new RuntimeException("A closure comment/reason is required if no candidates are selected.");
-        }
-
-        // 6. Apply changes and save
-        job.setStatus(JobStatus.CLOSED);
-        job.setCloseReason(dto.getCloseReason());
-
-        if (hasSelectedCandidates) {
-            job.setSelectedCandidateIds(dto.getSelectedCandidateIds());
+            job.setStatus(JobStatus.CLOSED);
+            job.setCloseReason(dto.getCloseReason());
+            if (hasSelectedCandidates) {
+                job.setSelectedCandidateIds(dto.getSelectedCandidateIds());
+            }
+        } else if (dto.getStatus() == JobStatus.OPEN) {
+            job.setStatus(JobStatus.OPEN);
+            job.setCloseReason(null);
         }
 
         Job savedJob = jobRepository.save(job);
@@ -223,7 +222,7 @@ public class JobService {
         JobDTO dto = modelMapper.map(job, JobDTO.class);
         dto.setCompanyName(job.getCompany().getName());
         dto.setCreatedById(job.getCreatedBy().getId());
-
+        dto.setYoer(job.getYoer());
         // Map Entities -> SkillReqDTO
         dto.setRequiredSkills(job.getRequiredSkills().stream()
                 .map(skill -> mapSkillToReqDto(skill, true))
@@ -255,7 +254,7 @@ public class JobService {
         dto.setCreatedById(job.getCreatedBy().getId());
         dto.setType(job.getType() != null ? job.getType() : null);
         dto.setStatus(job.getStatus() != null ? job.getStatus().toString() : null);
-
+        dto.setYoer(job.getYoer() != null ? job.getYoer() : 0);
         if (job.getRequiredSkills() != null) {
             dto.setRequiredSkills(job.getRequiredSkills().stream()
                     .map(skill -> mapSkillToReqDto(skill, true))

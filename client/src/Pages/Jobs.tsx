@@ -7,6 +7,7 @@ import JobForm from './Jobs/JobForm';
 import JobDetails from './Jobs/JobDetails';
 import api from '../utils/api';
 import type { Job, JobFormData } from '../Types/jobTypes';
+import { useNavigate } from 'react-router-dom';
 
 const JobsPage = () => {
   const [ jobs, setJobs] = useState<Job[]>([]);
@@ -14,7 +15,7 @@ const JobsPage = () => {
   const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
   const [editingJobId, setEditingJobId] = useState<number | null>(null);
   const [creating, setCreating] = useState(false);
-
+  const navigate = useNavigate();
   // Close job modal state
   const [closeModal, setCloseModal] = useState(false);
   const [closeReason, setCloseReason] = useState('');
@@ -99,11 +100,14 @@ const JobsPage = () => {
     }
   };
 
+  const handleViewJob = (jobId: number) => {
+    navigate(`/jobs/${jobId}`);
+  };
+
   // Handle edit
   const handleEditJob = (jobId: number) => setEditingJobId(jobId);
 
   // Handle view
-  const handleViewJob = (jobId: number) => setSelectedJobId(jobId);
 
   // Conditional rendering
   if (loading) {
@@ -114,18 +118,18 @@ const JobsPage = () => {
     );
   }
 
-  if (selectedJobId) {
-    return (
-      <JobDetails
-        jobId={selectedJobId}
-        onBack={() => setSelectedJobId(null)}
-        onEdit={(id) => {
-          setEditingJobId(id);
-          setSelectedJobId(null);
-        }}
-      />
-    );
-  }
+  // if (selectedJobId) {
+  //   return (
+  //     <JobDetails
+  //       jobId={selectedJobId}
+  //       onBack={() => setSelectedJobId(null)}
+  //       onEdit={(id) => {
+  //         setEditingJobId(id);
+  //         setSelectedJobId(null);
+  //       }}
+  //     />
+  //   );
+  // }
 
   if (editingJobId || creating) {
     const editingJob = jobs.find((job) => job.id === editingJobId);
@@ -143,7 +147,7 @@ const JobsPage = () => {
   }
 
   return (
-    <Box className="max-w-7xl mx-auto p-6">
+    <Box className="max-w-7xl mx-auto">
       <Box className="flex justify-between items-center mb-8">
         <Typography variant="h4" className="font-bold text-gray-900">
           Job Listings

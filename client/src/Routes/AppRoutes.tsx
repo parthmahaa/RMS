@@ -15,6 +15,7 @@ import Interview from '../Pages/Interview';
 import Users from '../Pages/Users';
 import BulkUpload from '../Pages/Recruiter/BulkUpload';
 import CandidateJobDetails from '../Pages/Candidate/CandidateJobDetails';
+import JobDetails from '../Pages/Jobs/JobDetails';
 const AppRoutes: React.FC = () => {
     const isAuthenticated = useAuthStore((state: any) => state.isAuthenticated);
     const isLoading = useAuthStore((state: any) => state.isLoading);
@@ -66,7 +67,11 @@ const AppRoutes: React.FC = () => {
                     path="jobs/:id"
                     element={
                         <ProtectedRoute>
-                            <CandidateJobDetails />
+                            {roles.includes("CANDIDATE") ? (
+                                <CandidateJobDetails />
+                            ) : (
+                                <JobDetails />
+                            )}
                         </ProtectedRoute>
                     }
                 />

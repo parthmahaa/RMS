@@ -25,6 +25,7 @@ public class ApplicationService {
     private final JobRepository jobRepository;
     private final CandidateRepository candidateRepository;
     private final UserRepo userRepository;
+    private final SkillRepository skillRepository;
     private final RecruiterRepository recruiterRepository;
     private final ModelMapper modelMapper;
 
@@ -47,6 +48,7 @@ public class ApplicationService {
         Applications application = new Applications();
         application.setJob(job);
         application.setCandidate(candidate);
+        application.setCandidateExperience(candidate.getTotalExperience().longValue()); // determined from profile details
         application.setAppliedAt(LocalDateTime.now());
         application.setStatus(ApplicationStatus.PENDING);
         application.setResumeFilePath(dto.getResumeFilePath());
@@ -96,27 +98,26 @@ public class ApplicationService {
                 .collect(Collectors.toList());
     }
 
+    // ======================= UPDATE THE STATUS OF A APPLICATION ========================
     @Transactional
     public JobApplicationDto updateApplicationStatus(Long applicationId, ApplicationStatusUpdateDto dto) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         UserEntity recruiterUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (!recruiterUser.getRoles().contains(RoleType.RECRUITER)) {
-            throw new RuntimeException("Only recruiters can update applications");
-        }
-
         Applications application = applicationRepository.findById(applicationId)
                 .orElseThrow(() -> new RuntimeException("Application not found"));
 
         Job job = application.getJob();
 
-        if (!job.getCreatedBy().getId().equals(recruiterUser.getId())) {
-            throw new RuntimeException("You are not authorized to update this application");
-        }
-
+        /* ADD OTHER DETAILS WHICH RECRUITER WILL UPDATE AT THE APPROVAL PHASE */
         application.setStatus(ApplicationStatus.valueOf(dto.getStatus().toString().toUpperCase()));
         application.setRecruiterComment(dto.getRemarks());
+
+        if(dto.getCandidateSkills()!=null && !dto.getCandidateSkills().isEmpty()){
+            List<Skill> skillsToAdd = skillRepository.findAllById(dto.getCandidateSkills());
+            application.setCandidateSkills(skillsToAdd);
+        }
 
         application = applicationRepository.save(application);
         return mapToDto(application);
@@ -132,7 +133,8 @@ public class ApplicationService {
         dto.setCoverLetter(app.getCoverLetter());
         dto.setStatus(app.getStatus() != null ? app.getStatus().name() : null);
         dto.setRecruiterComment(app.getRecruiterComment());
-
+        dto.setCandidateExperience(app.getCandidateExperience());
+        dto.setCandidateSkills(app.getCandidateSkills());
         Job job = app.getJob();
         if (job != null) {
             dto.setPosition(job.getPosition());

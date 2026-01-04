@@ -24,6 +24,7 @@ const JobForm = ({ jobId, initialData, onSuccess, onCancel }: JobFormProps) => {
     defaultValues: {
       position: initialData?.position || '',
       description: initialData?.description || '',
+      yoer: initialData?.yoer || 0,
       location: initialData?.location || '',
       type: initialData?.type || 'FULL_TIME',
       requiredSkillIds: initialData?.requiredSkills?.map(s => s.skillId) || [],
@@ -71,8 +72,6 @@ const JobForm = ({ jobId, initialData, onSuccess, onCancel }: JobFormProps) => {
     return skills.filter(s => ids.includes(s.id));
   };
 
-  const selectedRequiredSkills = skills.filter(skill => selectedRequiredSkillIds.includes(skill.id));
-  const selectedPreferredSkills = skills.filter(skill => selectedPreferredSkillIds.includes(skill.id));
 
   return (
     <Box className="max-w-4xl mx-auto">
@@ -84,32 +83,28 @@ const JobForm = ({ jobId, initialData, onSuccess, onCancel }: JobFormProps) => {
           {isEditMode ? 'Update the job details below' : 'Fill in the details to create a new job posting'}
         </Typography>
       </div>
-
-      <form onSubmit={handleSubmit(onSubmit)} onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-          }
-        }} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
         <FormSection title="Basic Information">
-          <div className="space-y-5">
-            <Controller
-              name="position"
-              control={control}
-              rules={{ required: 'Position is required' }}
-              render={({ field }) => (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Position Title *
-                  </label>
-                  <Input
-                    {...field}
-                    id="position"
-                    error={!!errors.position}
-                    helperText={errors.position?.message}
+          <div className='space-y-2'>
+          <Controller
+            name="position"
+            control={control}
+            rules={{ required: 'Position is required' }}
+            render={({ field }) => (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Position Title <span className='text-red-500'>*</span>
+                </label>
+                <Input
+                  {...field}
+                  id="position"
+                  error={!!errors.position}
+                  helperText={errors.position?.message}
                   />
-                </div>
-              )}
-            />
+              </div>
+            )}
+          />
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-5'>
 
             <Controller
               name="location"
@@ -118,7 +113,7 @@ const JobForm = ({ jobId, initialData, onSuccess, onCancel }: JobFormProps) => {
               render={({ field }) => (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Location *
+                    Location <span className='text-red-500'>*</span>
                   </label>
                   <Input
                     {...field}
@@ -129,10 +124,34 @@ const JobForm = ({ jobId, initialData, onSuccess, onCancel }: JobFormProps) => {
                 </div>
               )}
             />
+            <Controller
+              name='yoer'
+              control={control}
+              rules={{
+                required: 'Experience is required',
+                min: { value: 0, message: 'Cannot be negative' }
+              }}
+              render={({ field }) => (
+                <div>
+                  <label className="block text-sm font-  text-black mb-2">
+                    Years of Experience (Required) <span className='text-red-500'>*</span>
+                  </label>
+                  <Input
+                    {...field}
+                    type="number"
+                    id="yearsOfExperience"
+                    placeholder="e.g. 2"
+                    error={!!errors.yoer}
+                    helperText={errors.yoer?.message}
+                  />
+                </div>
+              )}
+              />
+              </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Job Type *
+                Job Type <span className='text-red-500'>*</span>
               </label>
               <AutocompleteWoControl
                 id='type'
@@ -157,8 +176,8 @@ const JobForm = ({ jobId, initialData, onSuccess, onCancel }: JobFormProps) => {
             rules={{ required: 'Description is required' }}
             render={({ field }) => (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description *
+                <label className="block text-sm font-medium text-gray-700">
+                  Description <span className='text-red-500'>*</span>
                 </label>
                 <Input
                   {...field}
@@ -175,76 +194,73 @@ const JobForm = ({ jobId, initialData, onSuccess, onCancel }: JobFormProps) => {
         </FormSection>
 
         <FormSection title="Skills & Requirements">
-          <div className="space-y-4">
-            
-            {/* Required Skills */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Required Skills (Mandatory)
-              </label>
+            <div className="space-y-2">
+              <Typography className="text-sm font-medium text-gray-700">
+                Required Skills <span className='text-red-500'>*</span>
+              </Typography>
               <AutocompleteWoControl
-                options={skills}
-                getOptionLabel={(option: SkillOption) => option.name}
                 multiple
+                options={skills}
+                loading={loadingSkills}
+                getOptionLabel={(o: SkillOption) => o.name}
                 value={getSelectedSkills(selectedRequiredSkillIds)}
-                onChange={(_event, newValue: SkillOption[]) => {
-                  const ids = newValue.map(s => s.id);
-                  setValue('requiredSkillIds', ids);
-                }}
-                label="Select required skills"
+                onChange={(_, newValue: SkillOption[]) =>
+                  setValue(
+                    'requiredSkillIds',
+                    newValue.map(s => s.id)
+                  )
+                }
               />
             </div>
 
-            {/* Preferred Skills */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Preferred Skills (Good to have)
-              </label>
+            <div className="space-y-2 mt-1">
+              <Typography className="text-sm font-medium text-gray-700">
+                Preferred Skills
+              </Typography>
               <AutocompleteWoControl
-                options={skills}
-                getOptionLabel={(option: SkillOption) => option.name}
                 multiple
+                options={skills}
+                loading={loadingSkills}
+                getOptionLabel={(o: SkillOption) => o.name}
                 value={getSelectedSkills(selectedPreferredSkillIds)}
-                onChange={(_event, newValue: SkillOption[]) => {
-                  const ids = newValue.map(s => s.id);
-                  setValue('preferredSkillIds', ids);
-                }}
-                label="Select preferred skills"
+                onChange={(_, newValue: SkillOption[]) =>
+                  setValue(
+                    'preferredSkillIds',
+                    newValue.map(s => s.id)
+                  )
+                }
               />
             </div>
-
-          </div>
         </FormSection>
-
-        <Box className="flex gap-3 pt-6 pb-4">
-          <Button
-            id="submit-job"
-            type="submit"
-            variant="contained"
-            disabled={submitting}
-            size="medium"
+      <Box className="flex gap-3 pt-6 pb-4">
+        <Button
+          id="submit-job"
+          type="submit"
+          variant="contained"
+          disabled={submitting}
+          size="medium"
           >
-            {submitting ? (
-              <>
-                <CircularProgress size={16} className="mr-2" />
-                {isEditMode ? 'Updating...' : 'Creating...'}
-              </>
-            ) : (
-              isEditMode ? 'Update Job' : 'Create Job'
-            )}
-          </Button>
-          <Button
-            id="cancel-job"
-            type="button"
-            variant="outlined"
-            onClick={onCancel}
-            disabled={submitting}
-            size="medium"
+          {submitting ? (
+            <>
+              <CircularProgress size={16} className="mr-2" />
+              {isEditMode ? 'Updating...' : 'Creating...'}
+            </>
+          ) : (
+            isEditMode ? 'Update Job' : 'Create Job'
+          )}
+        </Button>
+        <Button
+          id="cancel-job"
+          type="button"
+          variant="outlined"
+          onClick={onCancel}
+          disabled={submitting}
+          size="medium"
           >
-            Cancel
-          </Button>
-        </Box>
-      </form>
+          Cancel
+        </Button>
+      </Box>
+          </form>
     </Box>
   );
 };

@@ -2,12 +2,15 @@ package com.rms.entity;
 
 import com.rms.constants.ApplicationStatus;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @AllArgsConstructor
@@ -27,13 +30,24 @@ public class Applications {
 
     private String resumeFilePath;
 
+    @Column(length = 5000)
     private String coverLetter;
 
     @ManyToOne
     @JoinColumn(name = "candidate_id", nullable = false)
     private Candidate candidate;
 
+    private Long candidateExperience;
+
     private LocalDateTime appliedAt;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "tbl_application_skills",
+            joinColumns = @JoinColumn(name = "application_id"),
+            inverseJoinColumns = @JoinColumn(name = "skill_id")
+    )
+    private List<Skill> candidateSkills = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     private ApplicationStatus status;

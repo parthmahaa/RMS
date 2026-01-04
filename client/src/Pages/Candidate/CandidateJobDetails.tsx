@@ -16,12 +16,10 @@ const CandidateJobDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const userId = useAuthStore((state: any) => state.userId);
-
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [applicationFormOpen, setApplicationFormOpen] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
-
   useEffect(() => {
     if (id) {
       fetchJobAndCheckStatus();
@@ -34,12 +32,8 @@ const CandidateJobDetails = () => {
       const jobResponse = await api.get(`/jobs/${id}`);
       const jobData: Job = jobResponse.data.data;
       setJob(jobData);
-      const profileResponse = await api.get('/user/profile');
-      if (profileResponse.data.data && profileResponse.data.data.role.includes('CANDIDATE')) {
-        const candidateId = profileResponse.data.data.id;
-        const isApplied = jobData.applications?.some(app => app.candidateId === candidateId);
-        setHasApplied(isApplied || false);
-      }
+      const isApplied = jobData.applications?.some(app => app.candidateId === Number(userId));
+      setHasApplied(isApplied || false);
 
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to load job details');
@@ -114,6 +108,11 @@ const CandidateJobDetails = () => {
           <div className="flex items-center gap-1">
             <Work fontSize="small" />
             <span className="text-sm">{formatJobType(job.type)}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-sm">
+              {job.yoer ? `${job.yoer}+ Years Exp` : 'Fresher'}
+            </span>
           </div>
           <div className="flex items-center gap-1">
             <CalendarToday fontSize="small" />

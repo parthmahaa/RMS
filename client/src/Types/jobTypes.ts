@@ -12,11 +12,12 @@ export interface JobApplication {
   appliedAt: string;
   candidateName: string ;
   recruiterComment: string | null;
-  status: string;
+  status: ApplicationStatus;
   position?: string;
   coverLetter?: string;
   resumeFilePath?: string;
   companyName?: string;
+  candidateSkills: Skill[];
   location?: string;
   type?: string;
 }
@@ -24,6 +25,7 @@ export interface JobApplication {
 export interface Job {
   id: number;
   position: string;
+  yoer : number;
   description: string;
   location: string;
   type: string;
@@ -42,6 +44,7 @@ export interface Job {
 export interface JobFormData {
   position: string;
   description: string;
+  yoer : number;
   status: string;
   location: string;
   type: string;
@@ -114,3 +117,5 @@ export interface ApplicationFormProps {
   job: Job;
   onClose: () => void;
 }
+
+export type ApplicationStatus = 'ACCEPTED'|'REJECTED' | 'PENDING' | 'REVIEWED' | 'LINKED'| 'HIRED';

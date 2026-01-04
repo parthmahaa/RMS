@@ -2,6 +2,7 @@ package com.rms.entity;
 
 import com.rms.constants.JobStatus;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -42,6 +43,8 @@ public class Job {
     @CollectionTable(name = "tbl_job_selected_candidates", joinColumns = @JoinColumn(name = "job_id"))
     @Column(name = "candidate_id")
     private List<Long> selectedCandidateIds = new ArrayList<>();
+
+    private Long yoer;
 
     @ManyToOne
     @JoinColumn(name = "company_id", nullable = false)

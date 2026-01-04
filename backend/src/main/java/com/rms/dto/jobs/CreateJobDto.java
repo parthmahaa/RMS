@@ -26,6 +26,9 @@ public class CreateJobDto {
     @NotBlank(message = "Location is required")
     private String location;
 
+    @NotNull
+    private Long yoer;
+
     @NotBlank(message = "Type is required")
     private String type; // e.g., "FULL_TIME", "INTERN"
 

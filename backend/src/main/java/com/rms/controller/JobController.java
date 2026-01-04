@@ -2,8 +2,8 @@ package com.rms.controller;
 
 import com.rms.config.ApiResponse;
 import com.rms.dto.jobs.CreateJobDto;
-import com.rms.dto.jobs.JobCloseDto;
 import com.rms.dto.jobs.JobDTO;
+import com.rms.dto.jobs.JobStatusDto;
 import com.rms.dto.jobs.UpdateJobDto;
 import com.rms.service.JobService;
 import jakarta.validation.Valid;
@@ -67,14 +67,14 @@ public class JobController {
     }
 
     //close job
-    @PutMapping("/close/{id}")
+    @PutMapping("/status/{id}")
     @PreAuthorize("hasRole('RECRUITER')")
     public ResponseEntity<ApiResponse<?>> closeJob(
             @PathVariable Long id,
-            @Valid @RequestBody JobCloseDto dto) {
+            @Valid @RequestBody JobStatusDto dto) {
 
         try {
-            JobDTO closedJob = jobService.closeJob(id, dto);
+            JobDTO closedJob = jobService.updateJobStatus(id, dto);
             return ResponseEntity.ok(ApiResponse.<JobDTO>builder()
                     .status(HttpStatus.OK.value())
                     .message("Job closed successfully")

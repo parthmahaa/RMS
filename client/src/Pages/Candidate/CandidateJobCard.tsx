@@ -19,9 +19,9 @@ const CandidateJobCard = ({ job, onApply, onView, hasApplied }: CandidateJobCard
           )}
         </div>
 
-        <p className="text-sm text-black font-medium mb-2">{job.companyName}</p>
+        <p className="text-sm text-black font-medium ">{job.companyName}</p>
         <p className="text-sm text-gray-500 flex items-center mb-3">
-          📍 {job.location}
+        {job.location}
         </p>
 
         <span className="inline-block text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 px-2 py-1 rounded-md mb-3">

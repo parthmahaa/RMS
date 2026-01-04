@@ -21,6 +21,7 @@ public class JobDTO {
     private String type;
     private String status;
     private LocalDateTime postedAt;
+    private Long yoer;
     private String closeComment;
     private String closeReason;
     private List<Long> selectedCandidateIds;

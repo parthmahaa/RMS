@@ -159,19 +159,9 @@ const JobApplicationForm = ({ open, job, onClose }: ApplicationFormProps) => {
               </Typography>
             </Box>
           </div>
-
-          <Box className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <Typography variant="body2" className="font-medium text-blue-900 mb-2">
-              📋 Job Requirements
-            </Typography>
-            <Typography variant="body2" className="text-blue-800">
-              {job.description}
-            </Typography>
-          </Box>
         </Box>
       </DialogContent>
-
-      <DialogActions className="p-4 border-t">
+      <DialogActions className="p-4">
         <Button id="cancel-application" variant="outlined" onClick={handleClose} disabled={loading}>
           Cancel
         </Button>

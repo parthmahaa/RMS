@@ -103,8 +103,8 @@ public class ApplicationController {
         }
     }
 
-    @PutMapping("/{applicationId}/status")
-    @PreAuthorize("hasRole('RECRUITTER')")
+    @PatchMapping("/{applicationId}/status")
+    @PreAuthorize("hasRole('RECRUITER')")
     public ResponseEntity<ApiResponse<JobApplicationDto>> updateApplicationStatus(
             @PathVariable Long applicationId,
             @Valid @RequestBody ApplicationStatusUpdateDto dto) {

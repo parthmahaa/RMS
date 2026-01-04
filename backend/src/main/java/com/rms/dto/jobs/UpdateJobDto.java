@@ -24,6 +24,7 @@ public class UpdateJobDto {
     private String location;
     private String type;
     private String status; // open, hold, closed
+    private Long yoer;
 
     @Size(max = 1000)
     private String closeComment;
