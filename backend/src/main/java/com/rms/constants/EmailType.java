@@ -1,4 +1,9 @@
 package com.rms.constants;
 
 public enum EmailType {
+    OTP,
+    JOB_APPLICATION_ACCEPTED,
+    INTERVIEW_SCHEDULED,
+    JOB_MATCHED,
+    APPLICATION_STATUS_UPDATE
 }

@@ -1,8 +1,10 @@
 package com.rms.service;
 
 import com.rms.constants.ApplicationStatus;
+import com.rms.constants.EmailType;
 import com.rms.constants.RoleType;
 import com.rms.constants.UserStatus;
+import com.rms.dto.EmailDTO;
 import com.rms.entity.*;
 import com.rms.repository.*;
 import jakarta.transaction.Transactional;
@@ -31,6 +33,7 @@ public class RecruiterService {
     private final JobRepository jobRepository;
     private final NotificationRepository notificationRepository;
     private final ApplicationRepository applicationRepository;
+    private final RabbitMqProducer rabbitMqProducer;
 
     private static final String[] EXPECTED_HEADERS = {
             "Name", "Email", "Phone", "Experience", "Location",
@@ -191,7 +194,7 @@ public class RecruiterService {
 
                 applicationRepository.save(application);
 
-                // 7. FEEDBACK (Notify)
+                // 7. FEEDBACK
                 Notification notification = Notification.builder()
                         .recipient(candidate.getUser())
                         .message("Congratulations! You matched a new position: " + job.getPosition())
@@ -200,11 +203,18 @@ public class RecruiterService {
                         .isRead(false)
                         .build();
 
+                // ADD EMAIL TO THE QUEUE
+                Map<String, String> emailData = new HashMap<>();
+                emailData.put("jobTitle", job.getPosition());
+                emailData.put("name", candidate.getUser().getName()); // Useful if you want to greet them
+
+                EmailDTO emailDTO = new EmailDTO(candidate.getUser().getEmail(),EmailType.JOB_MATCHED,emailData);
+                rabbitMqProducer.sendEmail(emailDTO);
+
                 notificationRepository.save(notification);
                 matchesFound++;
             }
         }
-
         return "Auto-match complete. Linked " + matchesFound + " candidates.";
     }
 

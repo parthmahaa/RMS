@@ -1,8 +1,10 @@
 package com.rms.service;
 
 import com.rms.constants.ApplicationStatus;
+import com.rms.constants.EmailType;
 import com.rms.constants.JobStatus;
 import com.rms.constants.RoleType;
+import com.rms.dto.EmailDTO;
 import com.rms.dto.jobs.ApplicationStatusUpdateDto;
 import com.rms.dto.jobs.JobApplicationDto;
 import com.rms.entity.*;
@@ -15,7 +17,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,6 +31,7 @@ public class ApplicationService {
     private final UserRepo userRepository;
     private final SkillRepository skillRepository;
     private final RecruiterRepository recruiterRepository;
+    private final RabbitMqProducer rabbitMqProducer;
     private final ModelMapper modelMapper;
 
     //===================== APPLY FOR A JOB =================
@@ -118,8 +123,20 @@ public class ApplicationService {
             List<Skill> skillsToAdd = skillRepository.findAllById(dto.getCandidateSkills());
             application.setCandidateSkills(skillsToAdd);
         }
-
         application = applicationRepository.save(application);
+
+        // send mail
+        Map<String,String> emaildata= new HashMap<>();
+        emaildata.put("jobTitle", job.getPosition());
+        emaildata.put("status",application.getStatus().toString());
+        emaildata.put("company", job.getCompany().getName());
+
+        EmailDTO message = new EmailDTO(
+                application.getCandidate().getUser().getEmail(),
+                EmailType.APPLICATION_STATUS_UPDATE,
+                emaildata
+        );
+        rabbitMqProducer.sendEmail(message);
         return mapToDto(application);
     }
 

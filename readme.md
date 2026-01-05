@@ -7,6 +7,7 @@ Web based application to streamline the recruitment process. Built as a SaaS for
 - **React** 
 - **React**  (**Vite**) 
 - **Zustand** - State Management for react 
+- **RabbitMQ** (Message Queue)
 
 ## Features Implemented
 
@@ -36,6 +37,13 @@ Web based application to streamline the recruitment process. Built as a SaaS for
 - Password reset functionality
 - Bulk Upload candidates by recruiters through excel
 - Manage users for a company by recruiters
+
+### Notifications & Messaging
+- RabbitMQ for email notifications
+    - For OTPs
+    - Application status updates
+    - Job match alerts
+    - Scheduled interview updates
 
 ## Admin Functionalities
 - Delete users
@@ -80,16 +88,31 @@ spring.datasource.url=jdbc:postgresql://localhost:5432/rms
 spring.datasource.username=your_postgres_username
 spring.datasource.password=your_postgres_password
 spring.jpa.hibernate.ddl-auto=update
+
+# RabbitMQ Configuration
+spring.rabbitmq.host=localhost
+spring.rabbitmq.port=5672
+spring.rabbitmq.username=guest
+spring.rabbitmq.password=guest
+
+spring.mail.username=your_email@gmail.com
+spring.mail.password=your_app_password
 ```
 
-### 3. Run Backend
+### 3. Run RabbitMQ via Docker
+```bash
+docker run -d --name rms-rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:rms
+```
+- You can access the RabbitMQ dashboard at http://localhost:15672 (User: guest, Pass: guest).
+
+### 4. Run Backend
 ```bash
 cd backend
 ./mvnw spring-boot:run
 ```
 The backend will run at http://localhost:8080
 
-### 4. Run frontend
+### 5. Run frontend
 ```bash
 cd client
 npm install

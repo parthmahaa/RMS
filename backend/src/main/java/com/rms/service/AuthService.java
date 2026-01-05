@@ -1,7 +1,9 @@
 // java
 package com.rms.service;
 
+import com.rms.constants.EmailType;
 import com.rms.constants.UserStatus;
+import com.rms.dto.EmailDTO;
 import com.rms.dto.auth.*;
 import com.rms.constants.RoleType;
 import com.rms.entity.*;
@@ -30,12 +32,12 @@ public class AuthService {
 
     private final UserRepo userRepo;
     private final CompanyRepository companyRepository;
-    private final EmailService emailService;
     private final AuthenticationManager authenticationManager;
     private final AuthUtil authUtil;
     private final CandidateRepository candidateRepository;
     private final RecruiterRepository recruiterRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RabbitMqProducer rabbitMqProducer;
 
     public AuthResponseDTO login(LoginRequestDTO dto) {
         UserEntity user = userRepo.findByEmail(dto.getEmail())
@@ -106,9 +108,11 @@ public class AuthService {
         user.setOtp(otp);
         userRepo.save(user);
 
-        String subject = "Account Activation OTP";
-        String body = "Your OTP for account activation is: " + otp;
-        emailService.sendOtpAsync(user.getEmail(), subject, body);
+        Map<String,String> emailMessage = new HashMap<>();
+        emailMessage.put("otp",otp);
+
+        EmailDTO emailDTO = new EmailDTO(user.getEmail(), EmailType.OTP,emailMessage);
+        rabbitMqProducer.sendEmail(emailDTO);
     }
 
     @Transactional
@@ -178,8 +182,11 @@ public class AuthService {
         } else {
             throw new IllegalArgumentException("Invalid role specified. Please choose CANDIDATE or RECRUITER.");
         }
+        Map<String,String> emailData = new HashMap<>();
+        emailData.put("otp",otp);
 
-        emailService.sendOtpAsync(user.getEmail(), otp, user.getName());
+        EmailDTO message = new EmailDTO(user.getEmail(),EmailType.OTP,emailData);
+        rabbitMqProducer.sendEmail(message);
         return "Registration successful. Please check your email for an OTP to verify your account.";
     }
 
@@ -226,7 +233,11 @@ public class AuthService {
         user.setOtpGeneratedTime(LocalDateTime.now());
         userRepo.save(user);
 
-        emailService.sendOtpAsync(user.getEmail(), otp, user.getName());
+        Map<String,String> emailData = new HashMap<>();
+        emailData.put("otp",otp);
+
+        EmailDTO message = new EmailDTO(user.getEmail(),EmailType.OTP,emailData);
+        rabbitMqProducer.sendEmail(message);
         return "A new OTP has been sent to your email.";
     }
 
