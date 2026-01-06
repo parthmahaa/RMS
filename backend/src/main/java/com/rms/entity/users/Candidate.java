@@ -1,5 +1,8 @@
-package com.rms.entity;
+package com.rms.entity.users;
 
+import com.rms.entity.Applications;
+import com.rms.entity.UserEntity;
+import com.rms.entity.UserSkills;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -36,11 +39,6 @@ public class Candidate{
     private String phone;
 
     private String location;
-
-    // used when recruiter tries to add employees in bulk
-    @Column(name = "associated_company_id")
-    private Long associatedCompanyId;
-
     private Integer totalExperience;
     private Integer graduationYear;
     private String collegeName;

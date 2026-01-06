@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FaUserCircle } from "react-icons/fa";
 import { toast } from "sonner";
 import {
+	Add,
 	DashboardOutlined,
 	LogoutOutlined,
 } from "@mui/icons-material";
@@ -44,7 +45,7 @@ export function Sidebar({ }: SidebarProps) {
 
     if (roles?.includes("RECRUITER")) {
       items.push({ name: "Manage Jobs", icon: WorkIcon, path: "/jobs" });
-      items.push({ name: "Upload", icon: UploadIcon, path: "/upload" });
+      items.push({ name: "Add Users", icon: PersonAddAltIcon, path: "/upload" });
     } else if (roles?.includes("CANDIDATE")) {
       items.push({ name: "Browse Jobs", icon: WorkIcon, path: "/jobs" });
 	  items.push({name: "Applications" , icon: PersonAddAltIcon, path: "/applications"});

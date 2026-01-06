@@ -7,7 +7,7 @@ import com.rms.dto.skills.ProposedSkillDto;
 import com.rms.dto.skills.ProposedSkillUpdateDto;
 import com.rms.dto.skills.SkillDto;
 import com.rms.entity.ProposedSkill;
-import com.rms.entity.Recruiter; // MODIFIED: Import Recruiter
+import com.rms.entity.users.Recruiter; // MODIFIED: Import Recruiter
 import com.rms.entity.Skill;
 import com.rms.entity.UserEntity;
 import com.rms.repository.ProposedSkillRepository;

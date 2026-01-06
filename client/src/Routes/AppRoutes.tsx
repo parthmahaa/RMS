@@ -10,12 +10,12 @@ import Jobs from '../Pages/Jobs';
 import useAuthStore from '../Store/authStore';
 import CandidateDashboard from '../Pages/CandidateDashboard';
 import Applications from '../Pages/Applications';
-import Upload from '../Pages/Upload';
 import Interview from '../Pages/Interview';
 import Users from '../Pages/Users';
 import BulkUpload from '../Pages/Recruiter/BulkUpload';
 import CandidateJobDetails from '../Pages/Candidate/CandidateJobDetails';
 import JobDetails from '../Pages/Jobs/JobDetails';
+import ManageUsers from '../Pages/Recruiter/ManageUsers';
 const AppRoutes: React.FC = () => {
     const isAuthenticated = useAuthStore((state: any) => state.isAuthenticated);
     const isLoading = useAuthStore((state: any) => state.isLoading);
@@ -92,7 +92,7 @@ const AppRoutes: React.FC = () => {
                     path="upload"
                     element={
                         <ProtectedRoute>
-                            {roles.includes("RECRUITER") ? <BulkUpload /> : <Navigate to="/dashboard" replace />}
+                            {roles.includes("RECRUITER") ? <ManageUsers /> : <Navigate to="/dashboard" replace />}
                         </ProtectedRoute>
                     }
                 />

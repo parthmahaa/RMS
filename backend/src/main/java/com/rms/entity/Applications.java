@@ -1,8 +1,8 @@
 package com.rms.entity;
 
 import com.rms.constants.ApplicationStatus;
+import com.rms.entity.users.Candidate;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

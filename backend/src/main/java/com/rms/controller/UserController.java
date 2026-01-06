@@ -1,16 +1,10 @@
 package com.rms.controller;
 
 import com.rms.config.ApiResponse;
-import com.rms.constants.RoleType;
 import com.rms.dto.company.CompanyDto;
 import com.rms.dto.company.CompanyUpdateDto;
-import com.rms.dto.user.CandidateProfileDto;
-import com.rms.dto.user.CandidateProfileUpdateDto;
-import com.rms.dto.user.RecruiterProfileDto;
-import com.rms.dto.user.RecruiterProfileUpdateDto;
-import com.rms.entity.Recruiter;
+import com.rms.dto.user.*;
 import com.rms.entity.UserEntity;
-import com.rms.repository.UserRepo;
 import com.rms.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +14,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/user")
@@ -126,6 +123,64 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.builder()
                     .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .message("Error fetching profile: " + e.getMessage())
+                    .isError(true)
+                    .build());
+        }
+    }
+
+    @PostMapping("/candidate")
+    @PreAuthorize("hasRole('RECRUITER','ADMIN')")
+    public ResponseEntity<ApiResponse<String>> createCandidate(@Valid @RequestBody CreateCompanyUserDTO dto) {
+        try {
+            userService.createCandidate(dto);
+            return ResponseEntity.ok(ApiResponse.<String>builder()
+                    .status(HttpStatus.OK.value())
+                    .message("User invited successfully.")
+                    .isError(false)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.<String>builder()
+                    .status(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage())
+                    .isError(true)
+                    .build());
+        }
+    }
+
+    @PostMapping("/add")
+    @PreAuthorize("hasRole('RECRUITER')")
+    public ResponseEntity<ApiResponse<String>> inviteUser(@Valid @RequestBody CreateCompanyUserDTO dto) {
+        try {
+            userService.createUserByRecruiter(dto);
+            return ResponseEntity.ok(ApiResponse.<String>builder()
+                    .status(HttpStatus.OK.value())
+                    .message("User invited successfully.")
+                    .isError(false)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.<String>builder()
+                    .status(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage())
+                    .isError(true)
+                    .build());
+        }
+    }
+
+    @GetMapping("/employees")
+    public ResponseEntity<ApiResponse<List<EmployeeDTO>>> getCompanyEmployees(
+            @AuthenticationPrincipal UserEntity user) {
+        try {
+            List<EmployeeDTO> employees = userService.getCompanyEmployees(user.getEmail());
+            return ResponseEntity.ok(ApiResponse.<List<EmployeeDTO>>builder()
+                    .status(HttpStatus.OK.value())
+                    .message("Employees fetched successfully")
+                    .data(employees)
+                    .isError(false)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.<List<EmployeeDTO>>builder()
+                    .status(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage())
                     .isError(true)
                     .build());
         }

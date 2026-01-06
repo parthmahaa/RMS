@@ -1,4 +1,10 @@
 package com.rms.repository;
 
-public interface HrRepo {
+import com.rms.entity.users.HR;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface HrRepo extends JpaRepository<HR,Long> {
+    List<HR> findByCompanyId(Long companyId);
 }

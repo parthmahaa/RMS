@@ -93,22 +93,16 @@ const BulkUpload = () => {
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
       <div className="flex flex-col gap-6">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">
-            Bulk Upload
-          </h1>
           <p className="text-sm text-gray-500">
             Upload an Excel file to add multiple candidates at once.
           </p>
-        </div>
 
         {/* Instructions Card */}
         <div className="p-5 border border-gray-200 rounded-xl bg-white shadow-sm">
           <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-2 text-blue-600 mb-1">
+            <div className="flex items-center gap-2 text-blue-600">
               <AlertCircle size={20} />
               <h2 className="text-lg font-medium text-gray-900">Instructions</h2>
             </div>
@@ -154,7 +148,7 @@ const BulkUpload = () => {
           onDrop={handleDrop}
           onClick={() => !selectedFile && fileInputRef.current?.click()}
         >
-          <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mb-2">
+          <div className="w-16 h-fit rounded-full bg-gray-200 flex items-center justify-center mb-2">
             <FileSpreadsheet className="w-8 h-8 text-gray-600" />
           </div>
 
@@ -261,7 +255,6 @@ const BulkUpload = () => {
           </div>
         )}
       </div>
-    </div>
   );
 };
 

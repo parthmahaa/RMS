@@ -61,6 +61,11 @@ public class EmailService {
             case INTERVIEW_SCHEDULED ->
                     "Interview Scheduled: " + data.get("jobTitle");
 
+            case ADD_CANDIDATE ->
+                "Profile Created in RMS";
+            case PROFILE_CREATED ->
+                "Profile Created";
+
             default -> "Notification from RMS";
         };
     }
@@ -102,6 +107,17 @@ public class EmailService {
 
                 """.formatted(data.get("jobTitle"));
 
+            case PROFILE_CREATED -> """
+                    Your profile has been created with %s and you are assigned the %s role.
+                    
+                    Kindly login with this email to see more details.
+                    """.formatted(data.get("company"),data.get("role"));
+            case ADD_CANDIDATE -> """
+                    Hello %s
+                    Your profile has been created by %s at %s.
+                    
+                    Kindly login to RMS to see more details.
+                    """.formatted(data.get("name"),data.get("recruiterName"),data.get("company").toUpperCase());
             default -> "You have a new notification from RMS. Please login to check.";
         };
     }

@@ -7,6 +7,8 @@ import com.rms.dto.EmailDTO;
 import com.rms.dto.auth.*;
 import com.rms.constants.RoleType;
 import com.rms.entity.*;
+import com.rms.entity.users.Candidate;
+import com.rms.entity.users.Recruiter;
 import com.rms.repository.CandidateRepository;
 import com.rms.repository.CompanyRepository;
 import com.rms.repository.RecruiterRepository;
@@ -21,7 +23,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.management.relation.Role;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;

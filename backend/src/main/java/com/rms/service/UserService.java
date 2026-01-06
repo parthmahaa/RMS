@@ -1,11 +1,15 @@
 package com.rms.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rms.constants.EmailType;
 import com.rms.constants.RoleType;
+import com.rms.constants.UserStatus;
+import com.rms.dto.EmailDTO;
 import com.rms.dto.company.CompanyDto;
 import com.rms.dto.company.CompanyUpdateDto;
 import com.rms.dto.user.*;
 import com.rms.entity.*;
+import com.rms.entity.users.*;
 import com.rms.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -13,11 +17,12 @@ import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+
+import javax.management.relation.Role;
+import javax.swing.text.View;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +36,12 @@ public class UserService {
     private final SkillRepository skillRepository;
     private final RecruiterRepository recruiterRepository;
     private final CandidateRepository candidateRepository;
+    private final InterviewerRepo interviewerRepo;
+    private final HrRepo hrRepo;
+    private final ReviewerRepo reviewerRepo;
+    private final ViewerRepo viewerRepo;
+    private final RabbitMqProducer rabbitMqProducer;
+    private final PasswordEncoder passwordEncoder;
 
     private final Logger logger = (Logger) LoggerFactory.getLogger(UserService.class);
 
@@ -241,6 +252,190 @@ public class UserService {
         }
     }
 
+    //======================== FETCH ALL EMPLOYEES OF A COMPANY ====================
+    public List<EmployeeDTO> getCompanyEmployees(String email) {
+        UserEntity currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Recruiter currentRecruiter = recruiterRepository.findByUserId(currentUser.getId())
+                .orElseThrow(() -> new RuntimeException("User is not a recruiter"));
+
+        Company company = currentRecruiter.getCompany();
+        if (company == null) {
+            throw new RuntimeException("No company associated with this account.");
+        }
+
+        List<EmployeeDTO> employees = new ArrayList<>();
+
+        List<Recruiter> colleagues = recruiterRepository.findByCompanyId(company.getId());
+        for (Recruiter r : colleagues) {
+            if (!r.getUser().getId().equals(currentUser.getId())) {
+                employees.add(mapToEmployeeDto(r.getUser()));
+            }
+        }
+
+        List<Interviewer> interviewers = interviewerRepo.findByCompanyId(company.getId());
+        for (Interviewer c : interviewers) {
+            employees.add(mapToEmployeeDto(c.getUser()));
+        }
+
+        List<Viewer> viewers = viewerRepo.findByCompanyId(company.getId());
+        for(Viewer c : viewers){
+            employees.add(mapToEmployeeDto(c.getUser()));
+        }
+
+        List<HR> hrs = hrRepo.findByCompanyId(company.getId());
+        for (HR hr : hrs) {
+            employees.add(mapToEmployeeDto(hr.getUser()));
+        }
+
+        List<Reviewer> reviewers = reviewerRepo.findByCompanyId(company.getId());
+        for (Reviewer r : reviewers) {
+            employees.add(mapToEmployeeDto(r.getUser()));
+        }
+        return employees;
+    }
+
+    @Transactional
+    public void createCandidate(CandidateProfileDto dto) {
+        UserEntity currentUser = getAuthenticatedUserEntity();
+
+        Recruiter currentRecruiter = recruiterRepository
+                .findByUserId(currentUser.getId())
+                .orElseThrow(() ->
+                        new IllegalStateException("Only recruiters can perform this action"));
+
+        Company company = currentRecruiter.getCompany();
+        if (company == null) {
+            throw new IllegalStateException("Please complete company profile.");
+        }
+
+        if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("User with this email already exists.");
+        }
+
+        UserEntity user = UserEntity.builder()
+                .name(dto.getName())
+                .email(dto.getEmail())
+                .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                .roles(Set.of(RoleType.CANDIDATE))
+                .status(UserStatus.INVITED)
+                .isVerified(false)
+                .createdAt(new Date())
+                .build();
+
+        userRepository.save(user);
+
+        Candidate candidate = Candidate.builder()
+                .user(user)
+                .summary(dto.getSummary())
+                .phone(dto.getPhone())
+                .location(dto.getLocation())
+                .totalExperience(dto.getTotalExperience())
+                .degree(dto.getDegree())
+                .branch(dto.getBranch())
+                .collegeName(dto.getCollegeName())
+                .graduationYear(dto.getGraduationYear())
+                .currentCompany(dto.getCurrentCompany())
+                .profileCompleted(false)
+                .build();
+
+        if (dto.getSkills() != null && !dto.getSkills().isEmpty()) {
+
+            for (UserSkillDto skillDto : dto.getSkills()) {
+
+                Skill skill = skillRepository.findById(skillDto.getSkillId())
+                        .orElseThrow(() ->
+                                new RuntimeException("Skill not found with ID: " + skillDto.getSkillId()));
+
+                UserSkills userSkill = UserSkills.builder()
+                        .candidate(candidate)
+                        .skill(skill)
+                        .build();
+
+                candidate.addSkill(userSkill);
+            }
+        }
+        candidateRepository.save(candidate);
+
+        Map<String,String> emailData= new HashMap<>();
+        emailData.put("name" ,dto.getName());
+        emailData.put("recruiterName",currentRecruiter.getUser().getName());
+        emailData.put("company",currentRecruiter.getCompany().getName());
+        EmailDTO message = new EmailDTO(dto.getEmail(), EmailType.PROFILE_CREATED,emailData);
+        rabbitMqProducer.sendEmail(message);
+    }
+
+
+    //============================= CREATE USER BY RECRUITER ======================
+    @Transactional
+    public void createUserByRecruiter(CreateCompanyUserDTO dto) {
+        UserEntity currentUser = getAuthenticatedUserEntity();
+        Recruiter currentRecruiter = recruiterRepository.findByUserId(currentUser.getId())
+                .orElseThrow(() -> new IllegalStateException("Only recruiters can perform this action"));
+
+        Company company = currentRecruiter.getCompany();
+        if (company == null) {
+            throw new RuntimeException("Please complete company profile.");
+        }
+
+        if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("User with this email already exists.");
+        }
+
+        UserEntity newUser = UserEntity.builder()
+                .name(dto.getName())
+                .email(dto.getEmail())
+                .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                .roles(Set.of(dto.getRole()))
+                .status(UserStatus.INVITED)
+                .isVerified(false)
+                .createdAt(new Date())
+                .build();
+
+        UserEntity savedUser = userRepository.save(newUser);
+
+         if (dto.getRole() == RoleType.RECRUITER) {
+            Recruiter newEmployee = Recruiter.builder()
+                    .user(savedUser)
+                    .company(company)
+                    .build();
+            recruiterRepository.save(newEmployee);
+        } else if(dto.getRole() == RoleType.VIEWER){
+            HR hr = HR.builder()
+                    .company(company)
+                    .user(savedUser)
+                    .build();
+        }else if(dto.getRole() == RoleType.REVIEWER){
+            Reviewer reviewer = Reviewer.builder()
+                    .company(company)
+                    .user(savedUser)
+                    .build();
+        }else if(dto.getRole() == RoleType.INTERVIEWER){
+            Interviewer interviewer = Interviewer.builder()
+                    .company(company)
+                    .user(savedUser)
+                    .build();
+        }else{
+            throw new RuntimeException("Cannot create user with role:" + dto.getRole());
+        }
+
+        Map<String,String> emailData= new HashMap<>();
+        emailData.put("company" ,company.getName());
+        emailData.put("role",dto.getRole().toString());
+        EmailDTO message = new EmailDTO(dto.getEmail(), EmailType.PROFILE_CREATED,emailData);
+        rabbitMqProducer.sendEmail(message);
+    }
+
+    // ==========================  HELPER METHODS  ====================================
+
+    private boolean isValidRole(RoleType role) {
+        return role == RoleType.HR ||
+                role == RoleType.RECRUITER ||
+                role == RoleType.INTERVIEWER ||
+                role == RoleType.REVIEWER;
+    }
+
     private CandidateProfileDto mapCandidateToProfileDto(Candidate candidate, UserEntity user) {
         CandidateProfileDto dto = modelMapper.map(candidate, CandidateProfileDto.class);
 
@@ -258,6 +453,18 @@ public class UserService {
         dto.setProfileCompleted(candidate.isProfileComplete());
 
         return dto;
+    }
+
+    private EmployeeDTO mapToEmployeeDto(UserEntity user) {
+        RoleType role = user.getRoles().stream().findFirst().orElse(RoleType.CANDIDATE);
+
+        return EmployeeDTO.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .role(role)
+                .status(user.getStatus())
+                .build();
     }
 
     private CompanyDto mapToCompanyDto(Company company) {

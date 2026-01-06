@@ -1,7 +1,7 @@
 package com.rms.repository;
 
 
-import com.rms.entity.Candidate;
+import com.rms.entity.users.Candidate;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

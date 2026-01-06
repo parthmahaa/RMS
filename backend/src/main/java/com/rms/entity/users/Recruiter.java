@@ -1,10 +1,10 @@
-package com.rms.entity;
+package com.rms.entity.users;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.rms.entity.Company;
+import com.rms.entity.Job;
+import com.rms.entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
-import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.List;
 

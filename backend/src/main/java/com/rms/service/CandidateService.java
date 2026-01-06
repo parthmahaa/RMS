@@ -3,7 +3,7 @@ package com.rms.service;
 import com.rms.constants.ApplicationStatus;
 import com.rms.dto.jobs.JobApplicationDto;
 import com.rms.entity.Applications;
-import com.rms.entity.Candidate;
+import com.rms.entity.users.Candidate;
 import com.rms.repository.ApplicationRepository;
 import com.rms.repository.CandidateRepository;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 

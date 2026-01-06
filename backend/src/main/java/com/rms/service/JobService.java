@@ -1,13 +1,12 @@
 package com.rms.service;
 
-import com.rms.Application;
 import com.rms.constants.JobStatus;
 import com.rms.constants.JobType;
 import com.rms.constants.RoleType;
-import com.rms.constants.SkillType;
 import com.rms.dto.jobs.*;
 import com.rms.dto.skills.SkillReqDTO;
 import com.rms.entity.*;
+import com.rms.entity.users.Recruiter;
 import com.rms.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

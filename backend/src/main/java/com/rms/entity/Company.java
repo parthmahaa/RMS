@@ -1,5 +1,6 @@
 package com.rms.entity;
 
+import com.rms.entity.users.Recruiter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,25 +1,14 @@
 package com.rms.controller;
 
 import com.rms.config.ApiResponse;
-import com.rms.constants.ApplicationStatus;
 import com.rms.dto.jobs.JobApplicationDto;
 import com.rms.dto.notifications.NotificationDTO;
-import com.rms.dto.user.CandidateProfileDto;
-import com.rms.dto.user.CandidateProfileUpdateDto;
-import com.rms.entity.Applications;
-import com.rms.entity.Candidate;
-import com.rms.entity.Notification;
 import com.rms.entity.UserEntity;
-import com.rms.repository.ApplicationRepository;
-import com.rms.repository.CandidateRepository;
-import com.rms.repository.NotificationRepository;
 import com.rms.service.CandidateService;
 import com.rms.service.NotificationService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 

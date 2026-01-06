@@ -6,12 +6,13 @@ import com.rms.constants.RoleType;
 import com.rms.constants.UserStatus;
 import com.rms.dto.EmailDTO;
 import com.rms.entity.*;
+import com.rms.entity.users.Candidate;
+import com.rms.entity.users.Recruiter;
 import com.rms.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -134,7 +135,6 @@ public class RecruiterService {
                         .graduationYear(parseInteger(gradYearStr))
                         .collegeName(college)
                         .degree(fullDegree)
-                        .associatedCompanyId(companyId)
                         .profileCompleted(false)
                         .build();
 

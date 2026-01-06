@@ -37,6 +37,21 @@ interface CompanyDto {
     industry: string;
 }
 
+export interface AddCandidateFormData {
+  name: string;
+  email: string;
+  phone: string;
+  skillIds: number[]; 
+  location: string;
+  degree: string;
+  branch: string;
+  collegeName: string;
+  currentCompany: string;
+  graduationYear: number;
+  totalExperience: number;
+}
+
+
 /*
 =============== UI TYPES ===============
 */

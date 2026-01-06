@@ -2,17 +2,16 @@ package com.rms.service;
 
 import com.rms.constants.ApplicationStatus;
 import com.rms.constants.EmailType;
-import com.rms.constants.JobStatus;
-import com.rms.constants.RoleType;
 import com.rms.dto.EmailDTO;
 import com.rms.dto.jobs.ApplicationStatusUpdateDto;
 import com.rms.dto.jobs.JobApplicationDto;
 import com.rms.entity.*;
+import com.rms.entity.users.Candidate;
+import com.rms.entity.users.Recruiter;
 import com.rms.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 

@@ -1,9 +1,7 @@
 package com.rms.service;
 
-import com.rms.constants.RoleType;
 import com.rms.dto.user.UpdateUserDTO;
 import com.rms.dto.user.UserDTO;
-import com.rms.entity.Admin;
 import com.rms.entity.UserEntity;
 import com.rms.repository.AdminRepo;
 import com.rms.repository.UserRepo;
