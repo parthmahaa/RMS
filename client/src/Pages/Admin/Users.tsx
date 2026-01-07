@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import api from '../utils/api';
-import Button from '../Components/ui/Button';
-import Input from '../Components/ui/Input';
-import ConfirmDialog from '../Components/ui/ConfirmDialog';
-import { Pagination } from '../Components/ui/Pagination';
-// REMOVED: import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
-import { Trash2, UserCog, Save, X } from 'lucide-react'; // Added X icon for discard
-import AutocompleteWoControl from '../Components/ui/AutoCompleteWoControl';
+import api from '../../utils/api';
+import Button from '../../Components/ui/Button';
+import Input from '../../Components/ui/Input';
+import ConfirmDialog from '../../Components/ui/ConfirmDialog';
+import { Pagination } from '../../Components/ui/Pagination';
+import { Trash2, UserCog, Save, X } from 'lucide-react';
+import AutocompleteWoControl from '../../Components/ui/AutoCompleteWoControl';
 
 interface User {
   id: number;
@@ -26,18 +25,15 @@ function Users() {
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Role changes tracking
   const [pendingRoleChanges, setPendingRoleChanges] = useState<Record<number, string>>({});
   const [savingRoles, setSavingRoles] = useState<Record<number, boolean>>({});
 
-  // Password update dialog state
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordLoading, setPasswordLoading] = useState(false);
 
-  // Delete confirmation dialog
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
@@ -75,14 +71,12 @@ function Users() {
       await api.put(`/admin/users/${userId}/roles`, { roles: [newRole] })
       toast.success('User role updated successfully');
 
-      // Remove from pending changes
       setPendingRoleChanges(prev => {
         const updated = { ...prev };
         delete updated[userId];
         return updated;
       });
 
-      // Refresh users list
       fetchUsers();
     } catch (error: any) {
       toast.error(error?.response?.data?.message || 'Failed to update role');
@@ -172,7 +166,6 @@ function Users() {
         <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
       </div>
 
-      {/* Search and Filters */}
       <div className=" rounded-lg  border border-gray-200 p-4 mb-6">
         <div className="flex items-center gap-4">
           <div className="flex-1">
@@ -194,7 +187,6 @@ function Users() {
         </div>
       </div>
 
-      {/* Users Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         {loading ? (
           <div className="p-8 text-center text-gray-500">
@@ -251,7 +243,6 @@ function Users() {
                           />
                           {pendingRoleChanges[user.id] && (
                             <div className="flex items-center gap-1">
-                              {/* Save Icon */}
                               <button
                                 onClick={() => handleSaveRole(user.id)}
                                 disabled={savingRoles[user.id]}
@@ -260,7 +251,6 @@ function Users() {
                               >
                                 <Save className="w-4 h-4" />
                               </button>
-                              {/* Discard/Dismantle Icon */}
                               <button
                                 onClick={() => handleCancelRoleChange(user.id)}
                                 disabled={savingRoles[user.id]}
@@ -297,7 +287,6 @@ function Users() {
               </table>
             </div>
 
-            {/* Pagination */}
             <div className="px-6 py-4 border-t border-gray-200">
               <Pagination
                 page={page}
@@ -355,7 +344,6 @@ function Users() {
               />
             </div>
 
-            {/* DialogActions */}
             <div className="flex justify-end gap-3 px-6 py-4 bg-gray-50 rounded-b-lg border-t border-gray-200">
               <Button
                 id="cancel-password-update"
@@ -377,7 +365,6 @@ function Users() {
         </div>
       )}
 
-      {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         open={deleteDialogOpen}
         title="Delete User"

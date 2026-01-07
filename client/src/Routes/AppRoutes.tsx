@@ -11,7 +11,7 @@ import useAuthStore from '../Store/authStore';
 import CandidateDashboard from '../Pages/CandidateDashboard';
 import Applications from '../Pages/Applications';
 import Interview from '../Pages/Interview';
-import Users from '../Pages/Users';
+import Users from '../Pages/Admin/Users';
 import CandidateJobDetails from '../Pages/Candidate/CandidateJobDetails';
 import JobDetails from '../Pages/Jobs/JobDetails';
 import ManageUsers from '../Pages/Recruiter/ManageUsers';

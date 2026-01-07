@@ -15,7 +15,6 @@ Web based application to streamline the recruitment process. Built as a SaaS for
 - User registration with role assignment
 - JWT-based authentication
 - Role-based access control (Admin, Recruiter, Candidate)
-- Refresh token management
 
 ### Job Management
 - Create, read, update, delete job postings
@@ -29,13 +28,14 @@ Web based application to streamline the recruitment process. Built as a SaaS for
 - Update application workflow
 - File upload for resumes/documents
 - Accept/Reject/Hold applications
+- Tick skills a candidate posses and add remarks to application
 
 ### User Management
 - User profile management by Admins
 - Role-based user operations
 - User authentication and authorization
 - Password reset functionality
-- Bulk Upload candidates by recruiters through excel
+- Bulk Upload candidates by recruiters through excel or add manually
 - Manage users for a company by recruiters
 
 ### Notifications & Messaging
@@ -51,10 +51,8 @@ Web based application to streamline the recruitment process. Built as a SaaS for
 - Update user roles
 
 ## Features Under Development
-
 - Interview scheduling
-- Assign reviewers to postions and schedule test if needed
-- RabbitMQ for messaging queues
+- Assign reviewers to open postions and schedule test if needed
 
 ## Installation and Setup
 

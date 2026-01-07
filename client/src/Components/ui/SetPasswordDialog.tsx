@@ -4,7 +4,6 @@ import { X, KeyRound, Lock, Send } from "lucide-react";
 import Button from "./Button"; //
 import Input from "./Input"; //
 import api from "../../utils/api";
-import type { Password } from "@mui/icons-material";
 
 interface Props {
   email: string;
@@ -24,7 +23,6 @@ export const SetPasswordDialog = ({ email, onClose }: Props) => {
 
     setLoading(true);
     try {
-      // Changed endpoint to match backend
       await api.post("/auth/activate-account", {
         email: email,
         otp: formData.otp,
@@ -60,7 +58,6 @@ export const SetPasswordDialog = ({ email, onClose }: Props) => {
           <div>
             <Input
               label="Enter OTP"
-              placeholder="e.g. 123456"
               value={formData.otp}
               onChange={(e) => setFormData({ ...formData, otp: e.target.value })}
               required
@@ -70,7 +67,6 @@ export const SetPasswordDialog = ({ email, onClose }: Props) => {
               <Input
                 type="password"
                 label="New Password"
-                placeholder="••••••••"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required
@@ -80,7 +76,6 @@ export const SetPasswordDialog = ({ email, onClose }: Props) => {
               <Input
                 type="password"
                 label="Confirm Password"
-                placeholder="••••••••"
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                 required

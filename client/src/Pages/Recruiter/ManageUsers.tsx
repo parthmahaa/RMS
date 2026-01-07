@@ -1,28 +1,28 @@
 import { useState, useEffect } from 'react';
-import { 
-  Typography, 
-  Paper, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
+import {
+  Typography,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   Chip,
   IconButton,
   CircularProgress
 } from '@mui/material';
-import { 
-  Add, 
-  UploadFile, 
-  Search, 
-  Edit, 
+import {
+  Add,
+  UploadFile,
+  Search,
+  Edit,
   Delete
 } from '@mui/icons-material';
 import { toast } from 'sonner';
 import Button from '../../Components/ui/Button';
 import BulkUpload from './BulkUpload';
-import AddUserForm from './AddUserForm'; 
+import AddUserForm from './AddUserForm';
 import api from '../../utils/api';
 import ConfirmDialog from '../../Components/ui/ConfirmDialog';
 import CommonModal from '../../Components/layout/CommonModal';
@@ -43,7 +43,7 @@ const ManageUsers = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [selectedEmpId, setSelectedEmpId] = useState<number | null>(null);
 
@@ -71,7 +71,7 @@ const ManageUsers = () => {
   const handleDelete = async () => {
     if (!selectedEmpId) return;
     try {
-      await api.delete(`/user/recruiter/delete/${selectedEmpId}`); 
+      await api.delete(`/user/recruiter/delete/${selectedEmpId}`);
       toast.success('User removed successfully');
       setEmployees(prev => prev.filter(e => e.id !== selectedEmpId));
     } catch (error: any) {
@@ -86,7 +86,7 @@ const ManageUsers = () => {
     toast.info(`In development`);
   };
 
-  const filteredEmployees = employees.filter(emp => 
+  const filteredEmployees = employees.filter(emp =>
     emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     emp.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
     emp.role.toLowerCase().includes(searchQuery.toLowerCase())
@@ -102,25 +102,25 @@ const ManageUsers = () => {
       </div>
 
       <div className="flex justify-end gap-4 mb-6">
-        <Button 
+        <Button
           id="add-candidate-btn"
-          variant="contained" 
+          variant="contained"
           startIcon={<Add />}
           onClick={() => setShowAddModal(true)}
           sx={{ backgroundColor: 'black' }}
         >
           Add User
         </Button>
-        <Button 
+        <Button
           id="add-candidate-btn"
-          variant="contained" 
+          variant="contained"
           startIcon={<Add />}
           onClick={() => setShowCanidateModal(true)}
           sx={{ backgroundColor: 'black' }}
         >
           Add Candidate
         </Button>
-        <Button 
+        <Button
           id="toggle-upload-btn"
           variant="outlined"
           startIcon={<UploadFile />}
@@ -135,8 +135,8 @@ const ManageUsers = () => {
           openState={showCanidateModal}
           onClose={() => setShowCanidateModal(false)}
           title="Add New Candidate">
-            <AddCandidateForm onSuccess={() => setShowCanidateModal(false)} />
-          </CommonModal>
+          <AddCandidateForm onSuccess={() => setShowCanidateModal(false)} />
+        </CommonModal>
       )}
 
       {showAddModal && (
@@ -146,10 +146,10 @@ const ManageUsers = () => {
           title="Invite New User"
           sizes={["70%", "70%", "100%", "50%"]}
         >
-            <AddUserForm 
-                onSuccess={handleAddSuccess} 
-                onCancel={() => setShowAddModal(false)} 
-            />
+          <AddUserForm
+            onSuccess={handleAddSuccess}
+            onCancel={() => setShowAddModal(false)}
+          />
         </CommonModal>
       )}
 
@@ -161,21 +161,21 @@ const ManageUsers = () => {
           sizes={["70%", "70%", "100%", "80%"]}
           closeOnEscape
         >
-            <BulkUpload />
+          <BulkUpload />
         </CommonModal>
       )}
 
       {/* Search and List Section */}
       <Paper elevation={0} className="border border-gray-200 rounded-xl overflow-hidden bg-white">
         <div className="p-4 border-b border-gray-200 flex items-center gap-2">
-            <Search className="text-gray-400" />
-            <input 
-                type="text" 
-                placeholder="Search by name, email or role..." 
-                className="w-full outline-none text-sm text-gray-700"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          <Search className="text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search by name, email or role..."
+            className="w-full outline-none text-sm text-gray-700"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
 
         {/* Table */}
@@ -199,7 +199,7 @@ const ManageUsers = () => {
               ) : filteredEmployees.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} align="center" className="py-8 text-gray-500">
-                    No employees found matching your search.
+                    No employees found.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -208,28 +208,28 @@ const ManageUsers = () => {
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">
-                            {emp.name.charAt(0).toUpperCase()}
+                          {emp.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                            <Typography variant="body2" className="font-medium text-gray-900">
-                                {emp.name}
-                            </Typography>
-                            <Typography variant="caption" className="text-gray-500">
-                                {emp.email}
-                            </Typography>
+                          <Typography variant="body2" className="font-medium text-gray-900">
+                            {emp.name}
+                          </Typography>
+                          <Typography variant="caption" className="text-gray-500">
+                            {emp.email}
+                          </Typography>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                        <Chip 
-                            label={emp.role} 
-                            size="small" 
-                            className="bg-gray-100 text-gray-700 font-medium text-xs" 
-                        />
+                      <Chip
+                        label={emp.role}
+                        size="small"
+                        className="bg-gray-100 text-gray-700 font-medium text-xs"
+                      />
                     </TableCell>
                     <TableCell>
-                      <Chip 
-                        label={emp.status} 
+                      <Chip
+                        label={emp.status}
                         size="small"
                         color={emp.status === 'ACTIVE' ? 'success' : 'warning'}
                         variant={emp.status === 'ACTIVE' ? 'filled' : 'outlined'}
@@ -238,14 +238,14 @@ const ManageUsers = () => {
                     </TableCell>
                     <TableCell align="right">
                       <IconButton size="small" onClick={() => handleEdit(emp.id)}>
-                        <Edit fontSize="small" className='text-blue-600'/>
+                        <Edit fontSize="small" className='text-blue-600' />
                       </IconButton>
-                      <IconButton 
-                        size="small" 
+                      <IconButton
+                        size="small"
                         onClick={() => {
-                            setSelectedEmpId(emp.id);
-                            setDeleteConfirmOpen(true);
-                        }} 
+                          setSelectedEmpId(emp.id);
+                          setDeleteConfirmOpen(true);
+                        }}
                       >
                         <Delete fontSize="small" className='text-red-500' />
                       </IconButton>
@@ -258,7 +258,7 @@ const ManageUsers = () => {
         </TableContainer>
       </Paper>
 
-      <ConfirmDialog 
+      <ConfirmDialog
         open={deleteConfirmOpen}
         title="Remove User"
         message="Are you sure you want to remove this user from your company? This action cannot be undone."

@@ -81,7 +81,6 @@ export const OtpVerificationDialog: React.FC<OtpVerificationDialogProps> = ({ em
               type="text"
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
-              placeholder="Enter 6-digit OTP"
               className="text-center text-lg tracking-[0.5em]"
             />
           </div>

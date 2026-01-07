@@ -52,46 +52,6 @@ public class UserService {
     }
 
     @Transactional
-    public CompanyDto updateCompany(CompanyUpdateDto dto) {
-        UserEntity user = getAuthenticatedUserEntity();
-        Recruiter recruiter = recruiterRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new IllegalStateException("Recruiter not found"));
-        Company company;
-        if (recruiter.getCompany() == null) {
-            company = new Company();
-            company.setRecruiters(new ArrayList<>());
-            company.setJobs(new ArrayList<>());
-            recruiter.setCompany(company);
-        } else {
-            company = recruiter.getCompany();
-        }
-
-        modelMapper.map(dto, company);
-        company = companyRepository.save(company);
-
-        if (recruiter.getCompany() == null || !recruiter.getCompany().getId().equals(company.getId())) {
-            recruiter.setCompany(company);
-            recruiterRepository.save(recruiter);
-        }
-
-        return mapToCompanyDto(company);
-    }
-
-    public CompanyDto getMyCompany() {
-        UserEntity user = getAuthenticatedUserEntity();
-
-        if (!user.getRoles().contains(RoleType.RECRUITER)) {
-            throw new RuntimeException("User is not a recruiter.");
-        }
-        Recruiter recruiter = recruiterRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new IllegalStateException("Recruitter not found"));
-        if (recruiter.getCompany() == null) {
-            throw new RuntimeException("No company associated with your account");
-        }
-        return mapToCompanyDto(recruiter.getCompany());
-    }
-
-    @Transactional
     public Object updateProfile(String email, Object updateDto) {
         UserEntity user = getAuthenticatedUserEntity();
         if (user.getRoles().contains(RoleType.RECRUITER)) {
@@ -193,11 +153,38 @@ public class UserService {
 
     public Object getMyProfile(String email) {
         UserEntity user = getAuthenticatedUserEntity();
-        if (user.getRoles().contains(RoleType.RECRUITER)) {
-            Recruiter recruiter = recruiterRepository.findByUserId(user.getId())
-                    .orElseThrow(() -> new RuntimeException("Recruiter profile not found."));
+        if (user.getRoles().contains(RoleType.RECRUITER)
+                || user.getRoles().contains(RoleType.REVIEWER)
+                || user.getRoles().contains(RoleType.INTERVIEWER)
+                || user.getRoles().contains(RoleType.HR)
+                || user.getRoles().contains(RoleType.VIEWER)) {
 
-            Company company = recruiter.getCompany();
+            boolean isProfileComplete = true;
+            Company company = null;
+
+            if (user.getRoles().contains(RoleType.RECRUITER)) {
+                Recruiter recruiter = recruiterRepository.findByUserId(user.getId())
+                        .orElseThrow(() -> new RuntimeException("Recruiter profile not found."));
+                company = recruiter.getCompany();
+                isProfileComplete = recruiter.isProfileComplete();
+            } else if (user.getRoles().contains(RoleType.HR)) {
+                HR hr = hrRepo.findByUserId(user.getId())
+                        .orElseThrow(() -> new RuntimeException("HR profile not found."));
+                company = hr.getCompany();
+            } else if (user.getRoles().contains(RoleType.INTERVIEWER)) {
+                Interviewer interviewer = interviewerRepo.findByUserId(user.getId())
+                        .orElseThrow(() -> new RuntimeException("Interviewer profile not found."));
+                company = interviewer.getCompany();
+            } else if (user.getRoles().contains(RoleType.REVIEWER)) {
+                Reviewer reviewer = reviewerRepo.findByUserId(user.getId())
+                        .orElseThrow(() -> new RuntimeException("Reviewer profile not found."));
+                company = reviewer.getCompany();
+            } else if (user.getRoles().contains(RoleType.VIEWER)) {
+                Viewer viewer = viewerRepo.findByUserId(user.getId())
+                        .orElseThrow(() -> new RuntimeException("Viewer profile not found."));
+                company = viewer.getCompany();
+            }
+
             CompanyDto companyDto = null;
             if (company != null) {
                 companyDto = CompanyDto.builder()
@@ -211,11 +198,11 @@ public class UserService {
             }
 
             return RecruiterProfileDto.builder()
-                    .id(recruiter.getId())
+                    .id(user.getId())
                     .name(user.getName())
                     .email(user.getEmail())
-                    .role(RoleType.RECRUITER)
-                    .profileCompleted(recruiter.isProfileComplete())
+                    .role(user.getRoles().stream().findFirst().orElse(RoleType.RECRUITER))
+                    .profileCompleted(isProfileComplete)
                     .company(companyDto)
                     .build();
         } else if (user.getRoles().contains(RoleType.CANDIDATE)) {
@@ -418,11 +405,11 @@ public class UserService {
                     .build();
             interviewerRepo.save(interviewer);
         } else if (dto.getRole() == RoleType.HR) {
-             HR hr = HR.builder()
-                     .company(company)
-                     .user(savedUser)
-                     .build();
-             hrRepo.save(hr);
+            HR hr = HR.builder()
+                    .company(company)
+                    .user(savedUser)
+                    .build();
+            hrRepo.save(hr);
         } else {
             throw new RuntimeException("Cannot create user with role:" + dto.getRole());
         }
@@ -433,11 +420,12 @@ public class UserService {
         EmailDTO message = new EmailDTO(dto.getEmail(), EmailType.PROFILE_CREATED, emailData);
         rabbitMqProducer.sendEmail(message);
     }
+
     // ================= RECRUITER CAN DELETE A COMPANY USER ===========================
     public void deleteCompanyUser(Long userId) {
         UserEntity requester = getAuthenticatedUserEntity();
         Recruiter recruiter = recruiterRepository.findByUserId(requester.getId())
-                .orElseThrow(()-> new IllegalStateException("Only recruiters can delete"));
+                .orElseThrow(() -> new IllegalStateException("Only recruiters can delete"));
 
         Company recruiterCompany = recruiter.getCompany();
         UserEntity user = userRepository.findById(userId)
@@ -449,7 +437,7 @@ public class UserService {
         }
 
         if (user.getRoles().contains(RoleType.RECRUITER)) {
-            recruiterRepository.findByUserId(userId).ifPresent(recruiterRepository::delete);    
+            recruiterRepository.findByUserId(userId).ifPresent(recruiterRepository::delete);
         }
 
         if (user.getRoles().contains(RoleType.HR)) {

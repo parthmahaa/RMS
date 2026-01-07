@@ -27,48 +27,6 @@ public class UserController {
     private final UserService userService;
     private final Logger logger = LoggerFactory.getLogger(UserController.class);
 
-    @PutMapping("/company")
-    @PreAuthorize("hasAnyRole('RECRUITER', 'HR')")
-    public ResponseEntity<ApiResponse<CompanyDto>> updateCompany(@Valid @RequestBody CompanyUpdateDto dto) {
-        try {
-            CompanyDto companyDto = userService.updateCompany(dto);
-            return ResponseEntity.ok(ApiResponse.<CompanyDto>builder()
-                    .status(HttpStatus.OK.value())
-                    .message("Company details updated successfully via /company endpoint")
-                    .data(companyDto)
-                    .isError(false)
-                    .build());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.<CompanyDto>builder()
-                    .status(HttpStatus.BAD_REQUEST.value())
-                    .message(e.getMessage())
-                    .data(null)
-                    .isError(true)
-                    .build());
-        }
-    }
-
-    @GetMapping("/company")
-    @PreAuthorize("hasAnyRole('RECRUITER', 'HR')")
-    public ResponseEntity<ApiResponse<CompanyDto>> getMyCompany() {
-        try {
-            CompanyDto companyDto = userService.getMyCompany();
-            return ResponseEntity.ok(ApiResponse.<CompanyDto>builder()
-                    .status(HttpStatus.OK.value())
-                    .message("Company details fetched successfully via /company endpoint")
-                    .data(companyDto)
-                    .isError(false)
-                    .build());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.<CompanyDto>builder()
-                    .status(HttpStatus.BAD_REQUEST.value())
-                    .message(e.getMessage())
-                    .data(null)
-                    .isError(true)
-                    .build());
-        }
-    }
-
     @GetMapping("/status")
     public ResponseEntity<ApiResponse<Boolean>> checkMyProfileStatus() {
         try {

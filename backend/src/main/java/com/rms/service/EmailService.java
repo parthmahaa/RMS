@@ -82,7 +82,7 @@ public class EmailService {
 
             case APPLICATION_STATUS_UPDATE -> """
                 
-                The status of your application for %s at %s has been %s .
+                Your application for %s at %s has been %s .
                 
                 Please login to view more details.
                 """.formatted(data.get("jobTitle").toUpperCase(), data.get("company"),data.get("status").toUpperCase());

@@ -7,63 +7,7 @@ import Input from '../Components/ui/Input';
 import FormSection from '../Components/ui/FormSection';
 import { useProfileCompletion } from '../Hooks/useProfileCompletion'
 import AutocompleteWoControl from '../Components/ui/AutoCompleteWoControl';
-
-// --- DTO Interfaces ---
-interface UserSkillDto {
-  skillId: number;
-  id?: number;
-  name?: string;
-}
-
-interface CandidateProfileDto {
-  id: number;
-  name: string;
-  branch : string;
-  email: string;
-  role: string[];
-  profileCompleted: boolean;
-  summary: string;
-  phone: string;
-  location: string;
-  totalExperience: number | null;
-  graduationYear: number | null;
-  collegeName: string;
-  degree: string;
-  currentCompany?: string;
-  resumeFilePath?: string;
-  skills: UserSkillDto[];
-}
-
-interface CompanyDto {
-  id?: number;
-  name: string;
-  website: string;
-  location: string;
-  description: string;
-  industry: string;
-}
-
-interface RecruiterProfileDto {
-  id: number;
-  name: string;
-  email: string;
-  role: string[];
-  profileCompleted: boolean;
-  company: CompanyDto | null;
-}
-
-type CandidateProfileUpdateDto = Partial<Omit<CandidateProfileDto, 'id' | 'name' | 'email' | 'role' | 'profileCompleted'>> & {
-  skills?: { skillId: number }[];
-};
-
-interface RecruiterProfileUpdateDto {
-  company: Omit<CompanyDto, 'id'>;
-}
-
-interface MasterSkillOption {
-  value: number; // skillId
-  label: string; // skillName
-}
+import type { CandidateProfileDto, CandidateProfileUpdateDto, MasterSkillOption, RecruiterProfileDto, RecruiterProfileUpdateDto } from '../Types/user';
 
 const Profile: React.FC = () => {
   const [profile, setProfile] = useState<CandidateProfileDto | RecruiterProfileDto | null>(null);
@@ -73,7 +17,10 @@ const Profile: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [skillMasterOptions, setSkillMasterOptions] = useState<MasterSkillOption[]>([]);
   const isCandidate = profile?.role.includes('CANDIDATE');
-  const isRecruiter = profile?.role.includes('RECRUITER');
+  const canEditProfile =
+    profile?.role.includes('CANDIDATE') ||
+    profile?.role.includes('RECRUITER');
+  const isRecruiter = profile?.role.includes('RECRUITER') || profile?.role.includes('REVIEWER') || profile?.role.includes('VIEWER') || profile?.role.includes('INTERVIEWER') || profile?.role.includes('HR');
   const { isProfileComplete, refreshProfileStatus } = useProfileCompletion();
 
   const fetchProfile = useCallback(async () => {
@@ -92,14 +39,18 @@ const Profile: React.FC = () => {
           location: candidateData.location || '',
           totalExperience: candidateData.totalExperience ?? '',
           graduationYear: candidateData.graduationYear ?? '',
-          branch : candidateData.branch,
+          branch: candidateData.branch,
           collegeName: candidateData.collegeName || '',
           degree: candidateData.degree || '',
           currentCompany: candidateData.currentCompany || '',
           resumeFilePath: candidateData.resumeFilePath || '',
           skills: candidateData.skills?.map(s => ({ value: s.skillId, label: s.name || 'Loading...' })) || [],
         });
-      } else if (profileData.role.includes('RECRUITER')) {
+      } else if (profileData.role.includes('RECRUITER')
+        || profileData.role.includes('REVIEWER')
+        || profileData.role.includes('VIEWER')
+        || profileData.role.includes('INTERVIEWER')
+        || profileData.role.includes('HR')) {
         const recruiterData = profileData as RecruiterProfileDto;
         setFormData({
           company: {
@@ -223,7 +174,7 @@ const Profile: React.FC = () => {
           summary: candidateData.summary || '',
           phone: candidateData.phone || '',
           location: candidateData.location || '',
-          branch : candidateData.branch,
+          branch: candidateData.branch,
           totalExperience: candidateData.totalExperience ?? '',
           graduationYear: candidateData.graduationYear ?? '',
           collegeName: candidateData.collegeName || '',
@@ -231,7 +182,7 @@ const Profile: React.FC = () => {
           currentCompany: candidateData.currentCompany || '',
           resumeFilePath: candidateData.resumeFilePath || '',
           skills: candidateData.skills?.map(s => {
-            const master = skillMasterOptions.find(opt => opt.value ===  s.skillId);
+            const master = skillMasterOptions.find(opt => opt.value === s.skillId);
             return { value: s.skillId, label: master?.label || s.name || '...' };
           }) || [],
         });
@@ -277,15 +228,17 @@ const Profile: React.FC = () => {
           ) : (
             <span className="flex items-center px-3 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-700"><XCircle className="w-4 h-4 mr-1" /> Profile Incomplete</span> // Changed to yellow for incomplete
           )}
-          <Button
-            id='edit profile'
-            variant={isEditing ? 'contained' : 'outlined'}
-            size="small"
-            onClick={() => setIsEditing(!isEditing)}
-            disabled={isSaving}
-          > 
-            {isEditing ? 'Cancel' : 'Edit Profile'}
-          </Button>
+          {canEditProfile && (
+            <Button
+              id="edit profile"
+              variant={isEditing ? 'contained' : 'outlined'}
+              size="small"
+              onClick={() => setIsEditing(!isEditing)}
+              disabled={isSaving}
+            >
+              {isEditing ? 'Cancel' : 'Edit Profile'}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -310,32 +263,32 @@ const Profile: React.FC = () => {
 
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Skills</label>
-              {!isEditing&& (
+              {!isEditing && (
                 <div className="flex flex-wrap gap-2">
-                {formData.skills?.length > 0 ? (
-                  formData.skills.map((s: { value: number; label: string }) => (
-                    <span
-                      key={s.value}
-                      className="inline-flex items-center bg-orange-100 text-orange-700 text-sm px-3 py-1 rounded-full"
-                    >
-                      {s.label}
-                      {isEditing && (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleSkillChange(formData.skills.filter((sk: any) => sk.value !== s.value))
-                          }
-                          className="ml-2 text-orange-500 hover:text-orange-700"
-                        >
-                          ×
-                        </button>
-                      )}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-gray-400 text-sm">No skills selected</span>
-                )}
-              </div>
+                  {formData.skills?.length > 0 ? (
+                    formData.skills.map((s: { value: number; label: string }) => (
+                      <span
+                        key={s.value}
+                        className="inline-flex items-center bg-orange-100 text-orange-700 text-sm px-3 py-1 rounded-full"
+                      >
+                        {s.label}
+                        {isEditing && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleSkillChange(formData.skills.filter((sk: any) => sk.value !== s.value))
+                            }
+                            className="ml-2 text-orange-500 hover:text-orange-700"
+                          >
+                            ×
+                          </button>
+                        )}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-gray-400 text-sm">No skills selected</span>
+                  )}
+                </div>
               )}
               {isEditing && (
                 <AutocompleteWoControl
