@@ -28,6 +28,7 @@ public class Candidate{
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private UserEntity user;
 
+    @Builder.Default
     @OneToMany(mappedBy = "candidate",cascade = CascadeType.ALL,orphanRemoval = true)
     private Set<UserSkills> userSkills = new HashSet<>();
 

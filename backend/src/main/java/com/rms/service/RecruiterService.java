@@ -140,6 +140,13 @@ public class RecruiterService {
 
                 Candidate savedCandidate = candidateRepository.save(candidate);
                 successCount++;
+
+                Map<String, String> emailData = new HashMap<>();
+                emailData.put("name",user.getName());
+                emailData.put("recruiterName", recruiter.getUser().getName());
+                emailData.put("company", recruiter.getCompany().getName());
+                EmailDTO message = new EmailDTO(user.getEmail(), EmailType.ADD_CANDIDATE, emailData);
+                rabbitMqProducer.sendEmail(message);
             }
             return "Successfully uploaded " + successCount + " candidates.";
         }

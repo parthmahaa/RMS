@@ -54,7 +54,7 @@ const ManageUsers = () => {
   const fetchEmployees = async () => {
     setLoading(true);
     try {
-      const response = await api.get('/recruiter/employees');
+      const response = await api.get('/user/employees');
       setEmployees(response.data.data || []);
     } catch (error: any) {
       toast.error('Failed to fetch employees');
@@ -71,7 +71,7 @@ const ManageUsers = () => {
   const handleDelete = async () => {
     if (!selectedEmpId) return;
     try {
-      await api.delete(`/admin/users/${selectedEmpId}`); 
+      await api.delete(`/user/recruiter/delete/${selectedEmpId}`); 
       toast.success('User removed successfully');
       setEmployees(prev => prev.filter(e => e.id !== selectedEmpId));
     } catch (error: any) {
@@ -83,7 +83,7 @@ const ManageUsers = () => {
   };
 
   const handleEdit = (id: number) => {
-    toast.info(`Edit functionality for user ${id} coming soon`);
+    toast.info(`In development`);
   };
 
   const filteredEmployees = employees.filter(emp => 
@@ -237,8 +237,8 @@ const ManageUsers = () => {
                       />
                     </TableCell>
                     <TableCell align="right">
-                      <IconButton size="small" onClick={() => handleEdit(emp.id)} className="text-blue-600">
-                        <Edit fontSize="small" />
+                      <IconButton size="small" onClick={() => handleEdit(emp.id)}>
+                        <Edit fontSize="small" className='text-blue-600'/>
                       </IconButton>
                       <IconButton 
                         size="small" 
@@ -246,9 +246,8 @@ const ManageUsers = () => {
                             setSelectedEmpId(emp.id);
                             setDeleteConfirmOpen(true);
                         }} 
-                        className="text-red-600"
                       >
-                        <Delete fontSize="small" />
+                        <Delete fontSize="small" className='text-red-500' />
                       </IconButton>
                     </TableCell>
                   </TableRow>

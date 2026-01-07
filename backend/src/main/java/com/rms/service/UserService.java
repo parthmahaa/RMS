@@ -55,7 +55,7 @@ public class UserService {
     public CompanyDto updateCompany(CompanyUpdateDto dto) {
         UserEntity user = getAuthenticatedUserEntity();
         Recruiter recruiter = recruiterRepository.findByUserId(user.getId())
-                .orElseThrow(()-> new IllegalStateException("Recruiter not found"));
+                .orElseThrow(() -> new IllegalStateException("Recruiter not found"));
         Company company;
         if (recruiter.getCompany() == null) {
             company = new Company();
@@ -84,7 +84,7 @@ public class UserService {
             throw new RuntimeException("User is not a recruiter.");
         }
         Recruiter recruiter = recruiterRepository.findByUserId(user.getId())
-                .orElseThrow(()-> new IllegalStateException("Recruitter not found"));
+                .orElseThrow(() -> new IllegalStateException("Recruitter not found"));
         if (recruiter.getCompany() == null) {
             throw new RuntimeException("No company associated with your account");
         }
@@ -153,7 +153,7 @@ public class UserService {
             Candidate candidate = candidateRepository.findByUserId(user.getId())
                     .orElseThrow(() -> new RuntimeException("Candidate profile not found."));
 
-            modelMapper.map(dto,candidate);
+            modelMapper.map(dto, candidate);
             candidate.setBranch(dto.getBranch());
 
             // to prevent insertion before deletion
@@ -280,7 +280,7 @@ public class UserService {
         }
 
         List<Viewer> viewers = viewerRepo.findByCompanyId(company.getId());
-        for(Viewer c : viewers){
+        for (Viewer c : viewers) {
             employees.add(mapToEmployeeDto(c.getUser()));
         }
 
@@ -296,6 +296,7 @@ public class UserService {
         return employees;
     }
 
+    // ==================================== CREATE CANDIDATE MANUALLY BY RECRUITER ================================
     @Transactional
     public void createCandidate(CandidateProfileDto dto) {
         UserEntity currentUser = getAuthenticatedUserEntity();
@@ -341,9 +342,7 @@ public class UserService {
                 .build();
 
         if (dto.getSkills() != null && !dto.getSkills().isEmpty()) {
-
             for (UserSkillDto skillDto : dto.getSkills()) {
-
                 Skill skill = skillRepository.findById(skillDto.getSkillId())
                         .orElseThrow(() ->
                                 new RuntimeException("Skill not found with ID: " + skillDto.getSkillId()));
@@ -358,11 +357,10 @@ public class UserService {
         }
         candidateRepository.save(candidate);
 
-        Map<String,String> emailData= new HashMap<>();
-        emailData.put("name" ,dto.getName());
-        emailData.put("recruiterName",currentRecruiter.getUser().getName());
-        emailData.put("company",currentRecruiter.getCompany().getName());
-        EmailDTO message = new EmailDTO(dto.getEmail(), EmailType.PROFILE_CREATED,emailData);
+        Map<String, String> emailData = new HashMap<>();
+        emailData.put("role", RoleType.CANDIDATE.toString());
+        emailData.put("company", currentRecruiter.getCompany().getName());
+        EmailDTO message = new EmailDTO(dto.getEmail(), EmailType.PROFILE_CREATED, emailData);
         rabbitMqProducer.sendEmail(message);
     }
 
@@ -395,36 +393,78 @@ public class UserService {
 
         UserEntity savedUser = userRepository.save(newUser);
 
-         if (dto.getRole() == RoleType.RECRUITER) {
+        if (dto.getRole() == RoleType.RECRUITER) {
             Recruiter newEmployee = Recruiter.builder()
                     .user(savedUser)
                     .company(company)
                     .build();
             recruiterRepository.save(newEmployee);
-        } else if(dto.getRole() == RoleType.VIEWER){
-            HR hr = HR.builder()
+        } else if (dto.getRole() == RoleType.VIEWER) {
+            Viewer viewer = Viewer.builder()
                     .company(company)
                     .user(savedUser)
                     .build();
-        }else if(dto.getRole() == RoleType.REVIEWER){
+            viewerRepo.save(viewer);
+        } else if (dto.getRole() == RoleType.REVIEWER) {
             Reviewer reviewer = Reviewer.builder()
                     .company(company)
                     .user(savedUser)
                     .build();
-        }else if(dto.getRole() == RoleType.INTERVIEWER){
+            reviewerRepo.save(reviewer);
+        } else if (dto.getRole() == RoleType.INTERVIEWER) {
             Interviewer interviewer = Interviewer.builder()
                     .company(company)
                     .user(savedUser)
                     .build();
-        }else{
+            interviewerRepo.save(interviewer);
+        } else if (dto.getRole() == RoleType.HR) {
+             HR hr = HR.builder()
+                     .company(company)
+                     .user(savedUser)
+                     .build();
+             hrRepo.save(hr);
+        } else {
             throw new RuntimeException("Cannot create user with role:" + dto.getRole());
         }
 
-        Map<String,String> emailData= new HashMap<>();
-        emailData.put("company" ,company.getName());
-        emailData.put("role",dto.getRole().toString());
-        EmailDTO message = new EmailDTO(dto.getEmail(), EmailType.PROFILE_CREATED,emailData);
+        Map<String, String> emailData = new HashMap<>();
+        emailData.put("company", company.getName());
+        emailData.put("role", dto.getRole().toString());
+        EmailDTO message = new EmailDTO(dto.getEmail(), EmailType.PROFILE_CREATED, emailData);
         rabbitMqProducer.sendEmail(message);
+    }
+    // ================= RECRUITER CAN DELETE A COMPANY USER ===========================
+    public void deleteCompanyUser(Long userId) {
+        UserEntity requester = getAuthenticatedUserEntity();
+        Recruiter recruiter = recruiterRepository.findByUserId(requester.getId())
+                .orElseThrow(()-> new IllegalStateException("Only recruiters can delete"));
+
+        Company recruiterCompany = recruiter.getCompany();
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+
+
+        if (user.getRoles().contains(RoleType.VIEWER)) {
+            viewerRepo.findByUserId(userId).ifPresent(viewerRepo::delete);
+        }
+
+        if (user.getRoles().contains(RoleType.RECRUITER)) {
+            recruiterRepository.findByUserId(userId).ifPresent(recruiterRepository::delete);    
+        }
+
+        if (user.getRoles().contains(RoleType.HR)) {
+            hrRepo.findByUserId(userId).ifPresent(hrRepo::delete);
+        }
+
+        if (user.getRoles().contains(RoleType.INTERVIEWER)) {
+            interviewerRepo.findByUserId(userId).ifPresent(interviewerRepo::delete);
+        }
+
+        if (user.getRoles().contains(RoleType.REVIEWER)) {
+            reviewerRepo.findByUserId(userId).ifPresent(reviewerRepo::delete);
+        }
+
+        userRepository.delete(user);
     }
 
     // ==========================  HELPER METHODS  ====================================
@@ -481,7 +521,7 @@ public class UserService {
 
         } else if (user.getRoles().contains(RoleType.RECRUITER)) {
             Recruiter recruiter = recruiterRepository.findByUserId(user.getId())
-                    .orElseThrow(()-> new IllegalStateException("Recruiter not found"));
+                    .orElseThrow(() -> new IllegalStateException("Recruiter not found"));
             return recruiter.isProfileComplete();
         }
 
@@ -494,7 +534,7 @@ public class UserService {
         }
 
         Recruiter recruiter = recruiterRepository.findByUserId(user.getId())
-                .orElseThrow(()-> new IllegalArgumentException("Recruiter profile not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Recruiter profile not found"));
         Company company = recruiter.getCompany();
 
         if (company == null) {
@@ -507,8 +547,9 @@ public class UserService {
             throw new RuntimeException("Company profile incomplete. Please fill all required company details before proceeding.");
         }
     }
+
     private boolean isCompanyProfileIncomplete(Company company) {
-        return  company.getName() == null || company.getName().isEmpty() ||
+        return company.getName() == null || company.getName().isEmpty() ||
                 company.getLocation() == null || company.getLocation().isEmpty() ||
                 company.getIndustry() == null || company.getIndustry().isEmpty() ||
                 company.getWebsite() == null || company.getWebsite().isEmpty() ||

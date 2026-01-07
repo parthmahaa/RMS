@@ -130,7 +130,7 @@ public class UserController {
 
     @PostMapping("/candidate")
     @PreAuthorize("hasRole('RECRUITER','ADMIN')")
-    public ResponseEntity<ApiResponse<String>> createCandidate(@Valid @RequestBody CreateCompanyUserDTO dto) {
+    public ResponseEntity<ApiResponse<String>> createCandidate(@Valid @RequestBody CandidateProfileDto dto) {
         try {
             userService.createCandidate(dto);
             return ResponseEntity.ok(ApiResponse.<String>builder()
@@ -166,7 +166,29 @@ public class UserController {
         }
     }
 
+    @DeleteMapping("/recruiter/delete/{id}")
+    @PreAuthorize("hasRole('RECRUITER')")
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
+        try {
+            userService.deleteCompanyUser(id);
+            return ResponseEntity.ok(ApiResponse.<Void>builder()
+                    .status(HttpStatus.OK.value())
+                    .message("User deleted successfully")
+                    .data(null)
+                    .isError(false)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.<Void>builder()
+                    .status(HttpStatus.NOT_FOUND.value())
+                    .message(e.getMessage())
+                    .data(null)
+                    .isError(true)
+                    .build());
+        }
+    }
+
     @GetMapping("/employees")
+    @PreAuthorize("hasRole('RECRUITER')")
     public ResponseEntity<ApiResponse<List<EmployeeDTO>>> getCompanyEmployees(
             @AuthenticationPrincipal UserEntity user) {
         try {

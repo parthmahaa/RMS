@@ -12,7 +12,6 @@ import CandidateDashboard from '../Pages/CandidateDashboard';
 import Applications from '../Pages/Applications';
 import Interview from '../Pages/Interview';
 import Users from '../Pages/Users';
-import BulkUpload from '../Pages/Recruiter/BulkUpload';
 import CandidateJobDetails from '../Pages/Candidate/CandidateJobDetails';
 import JobDetails from '../Pages/Jobs/JobDetails';
 import ManageUsers from '../Pages/Recruiter/ManageUsers';
@@ -43,7 +42,7 @@ const AppRoutes: React.FC = () => {
                     index
                     element={
                         <ProtectedRoute>
-                            <Dashboard />
+                            <Navigate to="/dashboard" replace />
                         </ProtectedRoute>
                     }
                 />

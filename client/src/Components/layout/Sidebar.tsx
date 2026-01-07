@@ -41,7 +41,7 @@ export function Sidebar({ }: SidebarProps) {
 
 	// Filter navigation based on role
 	const navigation = useMemo(() => {
-    const items: any[] = [{ name: "Dashboard", icon: DashboardOutlined, path: "/dashboard" }];
+    const items: any[] = [{ name: "Dashboard", icon: DashboardOutlined, path: '/dashboard'}];
 
     if (roles?.includes("RECRUITER")) {
       items.push({ name: "Manage Jobs", icon: WorkIcon, path: "/jobs" });

@@ -107,6 +107,7 @@ public class EmailService {
 
                 """.formatted(data.get("jobTitle"));
 
+            // WHEN CREATED BY RECRUITER FOR ROLES
             case PROFILE_CREATED -> """
                     Your profile has been created with %s and you are assigned the %s role.
                     

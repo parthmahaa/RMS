@@ -191,6 +191,5 @@ PUT    /api/user/profile       - Update user profile(Recruiter,Candidate)
 
 ## Current Limitations
 
-- Implementaion of Message queues for emails
 - File upload size restrictions
 

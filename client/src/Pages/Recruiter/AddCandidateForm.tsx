@@ -29,7 +29,7 @@ const AddCandidateForm = ({ onSuccess}: AddCandidateFormProps) => {
       name: '',
       email: '',
       phone: '',
-      skillIds: [],
+      skills: [],
       location: '',
       degree: '',
       branch: '',
@@ -60,9 +60,9 @@ const AddCandidateForm = ({ onSuccess}: AddCandidateFormProps) => {
   const onSubmit = async (data: AddCandidateFormData) => {
     setLoading(true);
     try {
-      await api.post('/candidates', {
+      await api.post('/user/candidate', {
         ...data,
-        skills: data.skillIds.map(id => ({ skillId: id }))
+        skills: data.skills.map(id => ({ skillId: id }))
       });
       toast.success('Candidate added successfully');
       onSuccess();
@@ -113,7 +113,7 @@ const AddCandidateForm = ({ onSuccess}: AddCandidateFormProps) => {
 
       {/* SKILLS */}
       <Controller
-        name="skillIds"
+        name="skills"
         control={control}
         rules={{ required: 'Select at least one skill' }}
         render={({ field }) => (
@@ -127,8 +127,8 @@ const AddCandidateForm = ({ onSuccess}: AddCandidateFormProps) => {
             onChange={(_, newValue: Skill[]) =>
               field.onChange(newValue.map(skill => skill.id))
             }
-            error={!!errors.skillIds}
-            helperText={errors.skillIds?.message}
+            error={!!errors.skills}
+            helperText={errors.skills?.message}
           />
         )}
       />

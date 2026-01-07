@@ -41,7 +41,7 @@ export interface AddCandidateFormData {
   name: string;
   email: string;
   phone: string;
-  skillIds: number[]; 
+  skills: number[]; 
   location: string;
   degree: string;
   branch: string;
