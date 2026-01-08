@@ -10,7 +10,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Data
@@ -70,4 +72,12 @@ public class Job {
 
     @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Applications> applications = new ArrayList<>();
+
+    @ManyToMany
+    @JoinTable(
+            name = "tbl_job_reviewers",
+            joinColumns = @JoinColumn(name = "job_id"),
+            inverseJoinColumns = @JoinColumn(name = "reviewer_user_id")
+    )
+    private Set<UserEntity> reviewers = new HashSet<>();
 }

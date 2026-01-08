@@ -4,6 +4,10 @@ export interface UserSkillDto {
   name?: string;
 }
 
+export const JOB_VIEW_ROLES = ["REVIEWER", "RECRUITER" , "VIEWER" ,"HR"];
+export const JOB_EDIT_ROLES = ["RECRUITER", "HR"];
+export const ADD_USER_ROLES = ["RECRUITER"];
+
 export interface CandidateProfileDto {
   id: number;
   name: string;
@@ -39,6 +43,14 @@ export interface RecruiterProfileDto {
   role: string[];
   profileCompleted: boolean;
   company: CompanyDto | null;
+}
+
+export interface EmployeeDTO{
+  id : number;
+  name : string;
+  email? : string;
+  role  : string;
+  status? : string;
 }
 
 export type CandidateProfileUpdateDto = Partial<Omit<CandidateProfileDto, 'id' | 'name' | 'email' | 'role' | 'profileCompleted'>> & {

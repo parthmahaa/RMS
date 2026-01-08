@@ -54,7 +54,7 @@ const ManageUsers = () => {
   const fetchEmployees = async () => {
     setLoading(true);
     try {
-      const response = await api.get('/user/employees');
+      const response = await api.get('/recruiter/employees');
       setEmployees(response.data.data || []);
     } catch (error: any) {
       toast.error('Failed to fetch employees');
@@ -71,7 +71,7 @@ const ManageUsers = () => {
   const handleDelete = async () => {
     if (!selectedEmpId) return;
     try {
-      await api.delete(`/user/recruiter/delete/${selectedEmpId}`);
+      await api.delete(`/recruiter/delete/${selectedEmpId}`);
       toast.success('User removed successfully');
       setEmployees(prev => prev.filter(e => e.id !== selectedEmpId));
     } catch (error: any) {

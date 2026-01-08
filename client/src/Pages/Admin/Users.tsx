@@ -5,8 +5,8 @@ import Button from '../../Components/ui/Button';
 import Input from '../../Components/ui/Input';
 import ConfirmDialog from '../../Components/ui/ConfirmDialog';
 import { Pagination } from '../../Components/ui/Pagination';
-import { Trash2, UserCog, Save, X } from 'lucide-react';
 import AutocompleteWoControl from '../../Components/ui/AutoCompleteWoControl';
+import { Delete, ManageAccounts, ManageAccountsRounded, Save, X } from '@mui/icons-material';
 
 interface User {
   id: number;
@@ -16,10 +16,11 @@ interface User {
   verified: boolean;
 }
 
-const AVAILABLE_ROLES = ['ADMIN', 'RECRUITER', 'CANDIDATE'];
+const AVAILABLE_ROLES = ['ADMIN', 'RECRUITER', 'CANDIDATE', 'REVIEWER','VIEWER','HR','INTERVIEWER'];
 
 function Users() {
   const [users, setUsers] = useState<User[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -39,7 +40,22 @@ function Users() {
 
   useEffect(() => {
     fetchUsers();
-  }, [page, searchTerm]);
+  }, [page]);
+
+  useEffect(() => {
+  if (!searchTerm.trim()) {
+    setFilteredUsers(users);
+    return;
+  }
+  const search = searchTerm.toLowerCase();
+
+  const filtered = users.filter(user =>
+    user.email.toLowerCase().includes(search) ||
+    user.name.toLowerCase().includes(search)
+  );
+
+  setFilteredUsers(filtered);
+}, [searchTerm, users]);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -48,6 +64,7 @@ function Users() {
       });
       const userData: User[] = response?.data?.data || []
       setUsers(userData);
+      setFilteredUsers(userData);
       setTotalPages(1);
     } catch (error: any) {
       toast.error(error?.response?.data?.message || 'Failed to fetch users');
@@ -171,7 +188,6 @@ function Users() {
           <div className="flex-1">
             <Input
               id="search-users"
-              placeholder="Search by email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               fullWidth
@@ -192,7 +208,7 @@ function Users() {
           <div className="p-8 text-center text-gray-500">
             Loading users...
           </div>
-        ) : users.length === 0 ? (
+        ) : filteredUsers.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
             No users found
           </div>
@@ -217,7 +233,7 @@ function Users() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {users.map((user) => (
+                  {filteredUsers.map((user) => (
                     <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {user.name}
@@ -270,14 +286,14 @@ function Users() {
                             className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50 transition-colors"
                             title="Update Password"
                           >
-                            <UserCog className="w-4 h-4" />
+                            <ManageAccountsRounded className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => openDeleteDialog(user)}
                             className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 transition-colors"
                             title="Delete User"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Delete className="w-4 h-4" />
                           </button>
                         </div>
                       </td>

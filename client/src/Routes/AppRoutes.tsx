@@ -15,6 +15,7 @@ import Users from '../Pages/Admin/Users';
 import CandidateJobDetails from '../Pages/Candidate/CandidateJobDetails';
 import JobDetails from '../Pages/Jobs/JobDetails';
 import ManageUsers from '../Pages/Recruiter/ManageUsers';
+import { JOB_VIEW_ROLES, ADD_USER_ROLES, JOB_EDIT_ROLES } from '../Types/user';
 const AppRoutes: React.FC = () => {
     const isAuthenticated = useAuthStore((state: any) => state.isAuthenticated);
     const isLoading = useAuthStore((state: any) => state.isLoading);
@@ -58,7 +59,13 @@ const AppRoutes: React.FC = () => {
                     path="jobs"
                     element={
                         <ProtectedRoute>
-                            {roles.includes("CANDIDATE") ? <CandidateDashboard /> : <Jobs />}
+                            {roles.includes("CANDIDATE") ? (
+                                <CandidateDashboard />
+                            ) : JOB_VIEW_ROLES.some(role => roles.includes(role)) ? (
+                                <Jobs />
+                            ) : (
+                                <Navigate to="/interviews" replace />
+                            )}
                         </ProtectedRoute>
                     }
                 />
@@ -68,8 +75,10 @@ const AppRoutes: React.FC = () => {
                         <ProtectedRoute>
                             {roles.includes("CANDIDATE") ? (
                                 <CandidateJobDetails />
-                            ) : (
+                            ) : JOB_VIEW_ROLES.some(role => roles.includes(role)) ? (
                                 <JobDetails />
+                            ) : (
+                                <Navigate to="/interviews" replace />
                             )}
                         </ProtectedRoute>
                     }
@@ -88,14 +97,6 @@ const AppRoutes: React.FC = () => {
                     </ProtectedRoute>
                 } />
                 <Route
-                    path="upload"
-                    element={
-                        <ProtectedRoute>
-                            {roles.includes("RECRUITER") ? <ManageUsers /> : <Navigate to="/dashboard" replace />}
-                        </ProtectedRoute>
-                    }
-                />
-                <Route
                     path="interviews"
                     element={
                         <ProtectedRoute>
@@ -107,7 +108,13 @@ const AppRoutes: React.FC = () => {
                     path="users"
                     element={
                         <ProtectedRoute>
-                            {roles.includes("ADMIN") ? <Users /> : <Navigate to="/dashboard" replace />}
+                            {roles.includes("ADMIN") ? (
+                                <Users />
+                            ) : ADD_USER_ROLES.some(role => roles.includes(role)) ? (
+                                <ManageUsers />
+                            ) : (
+                                <Navigate to="/interviews" replace />
+                            )}
                         </ProtectedRoute>
                     }
                 />

@@ -31,6 +31,8 @@ import api from '../../utils/api';
 import Input from '../../Components/ui/Input';
 import JobForm from './JobForm'; 
 import AutocompleteWoControl from '../../Components/ui/AutoCompleteWoControl';
+import type { EmployeeDTO } from '../../Types/user';
+import { set } from 'react-hook-form';
 
 const JobDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -40,7 +42,10 @@ const JobDetails = () => {
   const [applicants, setApplicants] = useState<JobApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [matching, setMatching] = useState(false);
-  
+  const [allReviewers, setAllReviewers] = useState<EmployeeDTO[]>([]);
+  const [selectedReviewers, setSelectedReviewers] = useState<EmployeeDTO[]>([]);
+  const [savingReviewers, setSavingReviewers] = useState(false);
+
   // Edit Mode State
   const [isEditing, setIsEditing] = useState(false);
 
@@ -64,6 +69,7 @@ const JobDetails = () => {
       fetchJobDetails();
       fetchApplicants();
       fetchSkills();
+      fetchReviewers();
     }
   }, [id]);
 
@@ -97,11 +103,25 @@ const JobDetails = () => {
     }
   };
 
+  const fetchReviewers = async () => {
+    try {
+      const response = await api.get('/recruiter/reviewers'); 
+      setAllReviewers(response.data.data || []);
+    } catch (error) {
+      console.error("Failed to load reviewers");
+    }
+  };
+
   const fetchJobDetails = async () => {
     try {
       setLoading(true);
       const response = await api.get(`/jobs/${id}`);
+      const jobData = response.data.data || null;
       setJob(response.data.data || null);
+
+      if(jobData && jobData.reviewers){
+        setSelectedReviewers(jobData.reviewers);
+      }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to load job details');
       navigate('/jobs');
@@ -143,6 +163,21 @@ const JobDetails = () => {
       toast.error(error.response?.data?.message || 'Auto-match failed');
     } finally {
       setMatching(false);
+    }
+  };
+
+  const handleSaveReviewers = async () => {
+    if (!job) return;
+    setSavingReviewers(true);
+    try {
+      const reviewerIds = selectedReviewers.map(r => r.id);
+      await api.post(`/recruiter/jobs/${job.id}/assign-reviewers`, reviewerIds); 
+      toast.success('Reviewers assigned successfully');
+      fetchJobDetails();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to assign reviewers');
+    } finally {
+      setSavingReviewers(false);
     }
   };
 
@@ -249,7 +284,7 @@ const JobDetails = () => {
             <h1 className="text-2xl font-bold text-gray-900">{job.position}</h1>
             <div className="flex items-center gap-2 mt-1 text-gray-500">
               <Business fontSize="small" /> <span>{job.companyName}</span>
-              <span className="mx-2">•</span>
+              <span className="mx-2"></span>
               <Chip
                 label={formatJobStatus(job.status)}
                 color={job.status === 'OPEN' ? 'success' : 'error'}
@@ -279,7 +314,7 @@ const JobDetails = () => {
       <Divider className="mb-6" />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-4 gap-3">
             <div className="p-3 bg-gray-50 rounded-lg">
               <p className="text-xs text-gray-500 uppercase">Location</p>
               <p className="font-semibold text-gray-900">{job.location}</p>
@@ -320,6 +355,19 @@ const JobDetails = () => {
               ))}
             </div>
           </div>
+          <div className="bg-gray-50 border-t border-gray-200">
+            <div className="flex items-center gap-2 mt-3 mb-2">
+                <h3 className="text-lg font-bold text-gray-900">Assign Reviewers</h3>
+            </div>
+            
+            <AutocompleteWoControl
+                multiple
+                options={allReviewers}
+                getOptionLabel={(option: EmployeeDTO) => `${option.name} (${option.email})`}
+                value={selectedReviewers}
+                onChange={(_: any, newValue: EmployeeDTO[]) => setSelectedReviewers(newValue)}
+            />
+          </div>
 
           {job.status === 'CLOSED' && job.closeReason && (
             <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
@@ -330,7 +378,6 @@ const JobDetails = () => {
 
         </div>
 
-        {/*Applicants List */}
         <div className="lg:col-span-1">
           <div className="bg-white border-l-1 border-gray-200 overflow-hidden flex flex-col h-[600px] sticky top-4">
             <div className="p-4 border-gray-100 bg-gray-50 flex justify-between items-center">
@@ -381,6 +428,14 @@ const JobDetails = () => {
 
       <Divider className="my-6" />
       <div className="flex justify-end gap-3 mt-2">
+        <Button 
+            variant="contained" 
+            onClick={handleSaveReviewers}
+            disabled={savingReviewers}
+            sx={{ backgroundColor: 'black', '&:hover': { backgroundColor: '#333' } }}
+        >
+            {savingReviewers ? 'Saving...' : 'Save Changes'}
+        </Button>
         {job.status === 'CLOSED' ? (
           <Button variant="outlined" color="success" onClick={handleOpenJob}>
             Open Job
@@ -503,7 +558,7 @@ const JobDetails = () => {
                   disabled={updatingStatus}
                   className="mr-auto"
                 >
-                  Save Changes
+                  Save
                 </Button>
                 <Button
                   variant="outlined"
