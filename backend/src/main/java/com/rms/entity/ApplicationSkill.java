@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @Data
 @Table(name = "tbl_job_skills_required")
-public class JobSkillRequirement {
+public class ApplicationSkill {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -27,11 +27,6 @@ public class JobSkillRequirement {
     @JoinColumn(name = "skill_id")
     private Skill skill;
 
-    private boolean mandatory;
-
     private Integer yearsOfExperience;
-
-    @Enumerated(EnumType.STRING)
-    private SkillType level;  // basic ,intermediate, advanced
 
 }
