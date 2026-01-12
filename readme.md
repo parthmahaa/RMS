@@ -14,33 +14,49 @@ Web based application to streamline the recruitment process. Built as a SaaS for
 ### Authentication & Authorization
 - User registration with role assignment
 - JWT-based authentication
-- Role-based access control (Admin, Recruiter, Candidate)
+- Role-based access control
 
 ### Job Management
 - Create, read, update, delete job postings
 - Search and filter job listings
-- Job status management (Active, Closed, Hold)
+- Job status management (Active/closed)
 - Pagination for job listings
+- Assign reviewers to open positions
+- Manage applicants for a job
 
 ### Application Management
 - Submit job applications
 - Track application status
 - Update application workflow
 - File upload for resumes/documents
-- Accept/Reject/Hold applications
+- Change application status and remarks.
+- Candidates linked to positions based on skills.
+- Reviewers can review assigned job applications.
 - Tick skills a candidate posses and add remarks to application
 
 ### User Management
 - User profile management by Admins
 - Role-based user operations
 - User authentication and authorization
-- Password reset functionality
 - Bulk Upload candidates by recruiters through excel or add manually
 - Manage users for a company by recruiters
+
+### Interview Management
+- Applications moved to interview stage with default or custom rounds for candiates.
+- Flexibility to define interview rounds and assign interviewers.
+- Schedule online test
+- Meeting invites to respective users.
+- Interviewers and HR can add feedback to rounds.
+
+## Document Verification
+- HR can verify documents and assign joining date
+- Application can be put on hold based on verification stauts and feedback 
 
 ### Notifications & Messaging
 - RabbitMQ for email notifications
     - For OTPs
+    - Meeting invites
+    - Offer letters
     - Application status updates
     - Job match alerts
     - Scheduled interview updates
@@ -49,10 +65,6 @@ Web based application to streamline the recruitment process. Built as a SaaS for
 - Delete users
 - Update user profile (password and name)
 - Update user roles
-
-## Features Under Development
-- Interview scheduling
-- Assign reviewers to open postions and schedule test if needed
 
 ## Installation and Setup
 
@@ -144,13 +156,14 @@ POST   /api/auth/verify-otp        - Verify otp for verification
 
 ### Jobs
 ```
-GET    /api/jobs               - Get all jobs (with pagination for recruiters)
+GET    /api/jobs               - Get all jobs for company
 GET    /api/jobs/{id}          - Get job by ID
 POST   /api/jobs               - Create new job (Recruiter)
 PUT    /api/jobs/{id}          - Update job (Recruiter)
 DELETE /api/jobs/{id}          - Delete job (Admin)
 GET    /api/jobs/open          - Get open jobs for a company (Candidate)
 PUT    /api/jobs/status/id     - Close job (Recruiter)
+GET    /api/jobs/assinged      - Get assigned jobs (Reviewer)
 ```
 
 ### Applications
@@ -164,13 +177,30 @@ PUT    /api/application/{id/}/status  - Update application status
 
 ### Recruiter 
 ```
-POST   /api/recruiter/bulk-upload     - Upload candidates from excel 
-GET    /api/recruiter/auto-mathc      - Link canidates to jobs based on skills
+POST   /api/recruiter/bulk-upload       - Upload candidates from excel 
+GET    /api/recruiter/auto-match        - Link canidates to jobs
+POST   /api/recruiter/candidate         - Create candidate
+POST   /api/recruiter/add               - Add user to company
+DELETE /api/recruiter/delete/id         - Delete user by recruiter
+GET    /api/recruiter/employees         - Get company employees
+POST   /api/recruiter/jobs/{id}/assign  - Assign reviewers to jobs  
 
 ```
 ### Skills
 ```
 GET   /api/skills     - Get all skills
+```
+
+### Interview
+```
+GET   /interviews/assigned              - Get assigned interviews 
+POST  /interviews/rounds/{id}/assign    - Assign interviewers to round
+POST   /interviews/rounds/{id}/feedback - Give feeback for rounds.
+GET   /interviews/company               - Get interviews for a company
+POST  /interviews/{id}/verify           - Verify documents
+GET   /interviews/my                    - Scheduled interviews for a canidate
+POST  /interviews/{id}/documents        - Upload documents by candidate
+POST  /interviews/{id}/verify           - Verify documents
 ```
 
 ### Admin
@@ -189,5 +219,10 @@ PUT    /api/user/profile       - Update user profile(Recruiter,Candidate)
 
 ## Current Limitations
 
-- File upload size restrictions
+- Reporting and analysis module not implemented
+- Generation of offer letters
+- Automated scoring mechanism
+- Create candidate from CV parsing
+- Notification channel for web notifications
+- Dashboard desing
 
