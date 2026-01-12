@@ -12,6 +12,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +29,7 @@ public class JobService {
     private final SkillRepository skillRepository;
     private final UserRepo userRepository;
     private final ModelMapper modelMapper;
+    private final UserService userService;
     private final RecruiterRepository recruiterRepository;
 
     @Transactional
@@ -115,6 +117,17 @@ public class JobService {
         return mapJobToDto(savedJob);
     }
 
+    public List<JobDTO> getJobsAssignedToReviewer(String email) {
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return jobRepository.findAll().stream()
+                .filter(job -> job.getReviewers().stream()
+                        .anyMatch(reviewer -> reviewer.getId().equals(user.getId())))
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
     public List<JobDTO> getOpenJobs() {
         return jobRepository.findAllOpenJobs().stream()
                 .map(this::mapToDto)
@@ -175,19 +188,17 @@ public class JobService {
     }
 
     public List<JobDTO> getJobsByCompany() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        UserEntity user = userRepository.findByEmail(email)
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UserEntity user = userRepository.findByEmail(auth.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Recruiter recruiter = recruiterRepository.findByUserId(user.getId())
-                .orElseThrow(()-> new IllegalStateException("Recruiter not found"));
+        Company company = userService.resolveCompanyByRole(user, auth);
 
-        if (recruiter.getCompany() == null) {
+        if (company == null) {
             throw new RuntimeException("You must update your company profile to view jobs.");
         }
-        Long companyId = recruiter.getCompany().getId();
 
-        return jobRepository.findJobsByCompany(companyId).stream()
+        return jobRepository.findJobsByCompany(company.getId()).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }

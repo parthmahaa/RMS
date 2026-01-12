@@ -20,6 +20,7 @@ import com.rms.entity.users.Recruiter;
 import com.rms.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +35,7 @@ public class InterviewService {
     private final InterviewRepository interviewRepository;
     private final InterviewRoundRepository interviewRoundRepository;
     private final ApplicationRepository applicationRepository;
-    private final RecruiterRepository recruiterRepository;
+    private final UserService userService;
     private final SkillRepository skillRepository;
     private final CandidateRepository candidateRepository;
     private final HrRepo hrRepo;
@@ -45,17 +46,17 @@ public class InterviewService {
     // ================= RECRUITER METHODS =================
 
     public List<InterviewDto> getCompanyInterviews(String email) {
-        UserEntity user = userRepository.findByEmail(email)
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UserEntity user = userRepository.findByEmail(auth.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Recruiter recruiter = recruiterRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new RuntimeException("Recruiter not found"));
+        Company company = userService.resolveCompanyByRole(user, auth);
 
-        if (recruiter.getCompany() == null) {
-            throw new RuntimeException("No company associated");
+        if (company == null) {
+            throw new RuntimeException("You must update your company profile to view jobs.");
         }
 
-        return interviewRepository.findByCompanyId(recruiter.getCompany().getId()).stream()
+        return interviewRepository.findByCompanyId(company.getId()).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
@@ -105,13 +106,12 @@ public class InterviewService {
     }
 
     public List<InterviewDto> getAssignedInterviews(String email) {
-        UserEntity user = userRepository.findByEmail(email).orElseThrow();
-        List<Interview> interviews = interviewRepository.findAllByInterviewersId(user.getId());
-        List<Interview> allInterviews = interviewRepository.findAll();
-        return allInterviews.stream()
-                .filter(i -> i.getRounds().stream()
-                        .anyMatch(r -> r.getInterviewers().stream()
-                                .anyMatch(u -> u.getId().equals(user.getId()))))
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return interviewRepository.findAll().stream()
+                .filter(i -> i.getInterviewers().stream()
+                        .anyMatch(u -> u.getId().equals(user.getId())))
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }

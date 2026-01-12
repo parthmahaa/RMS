@@ -2,8 +2,10 @@ import { Chip } from '@mui/material';
 import { Delete, Edit, Close as CloseIcon} from '@mui/icons-material';
 import type { JobCardProps } from '../../Types/jobTypes';
 import { formatJobStatus, formatJobType, formatDate } from '../../utils/jobFormatters';
+import { usePermissions } from '../../Hooks/usePermissions';
 
 const JobCard = ({ job, onDelete, onClose, onView, onEdit }: JobCardProps) => {
+  const permissions = usePermissions();
 
   return (
     <div
@@ -45,44 +47,51 @@ const JobCard = ({ job, onDelete, onClose, onView, onEdit }: JobCardProps) => {
 
       <p className="text-xs text-gray-400">Posted on {formatDate(job.postedAt)}</p>
 
-      <div className="flex justify-between items-center pt-3">
-        <div className="flex gap-2">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit(job.id);
-            }}
-            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"
-            title="Edit Job"
-          >
-            <Edit fontSize="small" />
-          </button>
+      {/* Action buttons - only show if user has permissions */}
+      {(permissions.can('job:edit') || permissions.can('job:delete') || permissions.can('job:close')) && (
+        <div className="flex justify-between items-center pt-3">
+          <div className="flex gap-2">
+            {permissions.can('job:edit') && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(job.id);
+                }}
+                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"
+                title="Edit Job"
+              >
+                <Edit fontSize="small" />
+              </button>
+            )}
+          </div>
+          <div className="flex gap-2">
+            {permissions.can('job:close') && job.status !== 'CLOSED' && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClose(job.id);
+                }}
+                className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-lg"
+                title="Close Job"
+              >
+                <CloseIcon fontSize="small" />
+              </button>
+            )}
+            {permissions.can('job:delete') && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(job.id);
+                }}
+                className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg"
+                title="Delete Job"
+              >
+                <Delete fontSize="small" />
+              </button>
+            )}
+          </div>
         </div>
-        <div className="flex gap-2">
-          {job.status !== 'CLOSED' && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onClose(job.id);
-              }}
-              className="p-1.5 text-orange-600 hover:bg-orange-50 rounded-lg"
-              title="Close Job"
-            >
-              <CloseIcon fontSize="small" />
-            </button>
-          )}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(job.id);
-            }}
-            className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg"
-            title="Delete Job"
-          >
-            <Delete fontSize="small" />
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

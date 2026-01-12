@@ -1,31 +1,34 @@
-  import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Box, CircularProgress, Typography, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from '@mui/material';
 import { toast } from 'sonner';
 import Button from '../Components/ui/Button';
 import JobCard from './Jobs/JobCard';
 import JobForm from './Jobs/JobForm';
-import JobDetails from './Jobs/JobDetails';
 import api from '../utils/api';
 import type { Job, JobFormData } from '../Types/jobTypes';
 import { useNavigate } from 'react-router-dom';
+import { usePermissions } from '../Hooks/usePermissions';
 
 const JobsPage = () => {
   const [ jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
   const [editingJobId, setEditingJobId] = useState<number | null>(null);
   const [creating, setCreating] = useState(false);
   const navigate = useNavigate();
+  const permissions = usePermissions();
+  
   // Close job modal state
   const [closeModal, setCloseModal] = useState(false);
   const [closeReason, setCloseReason] = useState('');
   const [closingJobId, setClosingJobId] = useState<number | null>(null);
 
-  // Fetch all jobs
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      const response = await api.get('/jobs');
+      const isReviewer = permissions.is('REVIEWER');
+      const endpoint = isReviewer ? '/jobs/assigned' : '/jobs';
+      
+      const response = await api.get(endpoint);
       setJobs(response.data.data || []);
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to fetch jobs');
@@ -152,14 +155,16 @@ const JobsPage = () => {
         <Typography variant="h4" className="font-bold text-gray-900">
           Job Listings
         </Typography>
-        <Button
-          id="create-job"
-          variant="contained"
-          onClick={() => setCreating(true)}
-          size="medium"
-        >
-          + Create Job
-        </Button>
+        {permissions.can('job:create') && (
+          <Button
+            id="create-job"
+            variant="contained"
+            onClick={() => setCreating(true)}
+            size="medium"
+          >
+            + Create Job
+          </Button>
+        )}
       </Box>
 
       {jobs.length > 0 ? (

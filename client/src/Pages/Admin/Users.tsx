@@ -6,7 +6,8 @@ import Input from '../../Components/ui/Input';
 import ConfirmDialog from '../../Components/ui/ConfirmDialog';
 import { Pagination } from '../../Components/ui/Pagination';
 import AutocompleteWoControl from '../../Components/ui/AutoCompleteWoControl';
-import { Delete, ManageAccounts, ManageAccountsRounded, Save, X } from '@mui/icons-material';
+import { Delete, ManageAccountsRounded, Save, X } from '@mui/icons-material';
+import { usePermissions } from '../../Hooks/usePermissions';
 
 interface User {
   id: number;
@@ -19,6 +20,7 @@ interface User {
 const AVAILABLE_ROLES = ['ADMIN', 'RECRUITER', 'CANDIDATE', 'REVIEWER','VIEWER','HR','INTERVIEWER'];
 
 function Users() {
+  const permissions = usePermissions();
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +39,8 @@ function Users() {
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  
+  const isReadOnly = !permissions.can('user:manage_roles');
 
   useEffect(() => {
     fetchUsers();
@@ -230,6 +234,11 @@ function Users() {
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Roles
                     </th>
+                    {!isReadOnly && (
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -251,13 +260,14 @@ function Users() {
                             options={AVAILABLE_ROLES}
                             value={user.roles?.[0] ?? null}
                             onChange={(_, value) => {
-                              if (typeof value === 'string' && value) {
+                              if (typeof value === 'string' && value && !isReadOnly) {
                                 handleRoleChange(user.id, value);
                               }
                             }}
                             size="small"
+                            disabled={isReadOnly}
                           />
-                          {pendingRoleChanges[user.id] && (
+                          {!isReadOnly && pendingRoleChanges[user.id] && (
                             <div className="flex items-center gap-1">
                               <button
                                 onClick={() => handleSaveRole(user.id)}
@@ -279,24 +289,26 @@ function Users() {
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => openPasswordDialog(user)}
-                            className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50 transition-colors"
-                            title="Update Password"
-                          >
-                            <ManageAccountsRounded className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => openDeleteDialog(user)}
-                            className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 transition-colors"
-                            title="Delete User"
-                          >
-                            <Delete className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
+                      {!isReadOnly && (
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => openPasswordDialog(user)}
+                              className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50 transition-colors"
+                              title="Update Password"
+                            >
+                              <ManageAccountsRounded className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => openDeleteDialog(user)}
+                              className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 transition-colors"
+                              title="Delete User"
+                            >
+                              <Delete className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

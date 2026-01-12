@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -50,6 +51,62 @@ public class UserService {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Authenticated user not found in database: " + email));
     }
+
+    public Company resolveCompanyByRole(UserEntity user, Authentication auth) {
+
+        if (auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_RECRUITER"))) {
+
+            Recruiter recruiter = recruiterRepository
+                    .findByUserId(user.getId())
+                    .orElseThrow(() -> new RuntimeException("Recruiter profile not found"));
+
+            return recruiter.getCompany();
+        }
+
+        if (auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_HR"))) {
+
+            HR hr = hrRepo
+                    .findByUserId(user.getId())
+                    .orElseThrow(() -> new RuntimeException("Viewer profile not found"));
+
+            return hr.getCompany();
+        }
+
+        if (auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_VIEWER"))) {
+
+            Viewer viewer = viewerRepo
+                    .findByUserId(user.getId())
+                    .orElseThrow(() -> new RuntimeException("Viewer profile not found"));
+
+            return viewer.getCompany();
+        }
+
+        if (auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_INTERVIEWER"))) {
+
+            Interviewer interviewer = interviewerRepo
+                    .findByUserId(user.getId())
+                    .orElseThrow(() -> new RuntimeException("Viewer profile not found"));
+
+            return interviewer.getCompany();
+        }
+
+        if (auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_REVIEWER"))) {
+
+            Reviewer reviewer = reviewerRepo
+                    .findByUserId(user.getId())
+                    .orElseThrow(() -> new RuntimeException("Viewer profile not found"));
+
+            return reviewer.getCompany();
+        }
+
+        throw new RuntimeException("Unauthorized role");
+    }
+
 
     @Transactional
     public Object updateProfile(String email, Object updateDto) {

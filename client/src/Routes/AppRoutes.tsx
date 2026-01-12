@@ -14,10 +14,9 @@ import Users from '../Pages/Admin/Users';
 import CandidateJobDetails from '../Pages/Candidate/CandidateJobDetails';
 import JobDetails from '../Pages/Jobs/JobDetails';
 import ManageUsers from '../Pages/Recruiter/ManageUsers';
-import { JOB_VIEW_ROLES, ADD_USER_ROLES, JOB_EDIT_ROLES, INTERVIEW_VIEW_ROLES } from '../Types/user';
+import { JOB_VIEW_ROLES, ADD_USER_ROLES } from '../Types/user';
 import Interview from '../Pages/Interview/Interview';
 import CandidateInterview from '../Pages/Interview/CandidateInterview';
-import InterviewerDashboard from '../Pages/Interview/InterviewDashboard';
 import HRInterview from '../Pages/Interview/HRInterview';
 const AppRoutes: React.FC = () => {
     const isAuthenticated = useAuthStore((state: any) => state.isAuthenticated);
@@ -105,8 +104,6 @@ const AppRoutes: React.FC = () => {
                         <ProtectedRoute>
                             {roles.includes("CANDIDATE") ? (
                                 <CandidateInterview />
-                            ) : roles.includes("INTERVIEWER") ? (
-                                <InterviewerDashboard />
                             ) : roles.includes("HR") ? (
                                 <HRInterview />
                             ) : (
@@ -123,8 +120,10 @@ const AppRoutes: React.FC = () => {
                                 <Users />
                             ) : ADD_USER_ROLES.some(role => roles.includes(role)) ? (
                                 <ManageUsers />
+                            ) : roles.includes("VIEWER") ? (
+                                <Users />
                             ) : (
-                                <Navigate to="/interviews" replace />
+                                <Navigate to="/dashboard" replace />
                             )}
                         </ProtectedRoute>
                     }

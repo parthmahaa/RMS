@@ -83,6 +83,7 @@ interface InterviewDetailsModalProps {
     onUpdateFeedbackRow: (roundId: number, index: number, field: keyof SkillFeedbackDto, value: any) => void;
     onOpenDecisionDialog: () => void;
     getStatusColor: (status: string) => 'success' | 'error' | 'warning' | 'info' | 'default';
+    isReadOnly?: boolean;
 }
 
 const InterviewDetailsModal = ({
@@ -102,7 +103,8 @@ const InterviewDetailsModal = ({
     onRemoveFeedbackRow,
     onUpdateFeedbackRow,
     onOpenDecisionDialog,
-    getStatusColor
+    getStatusColor,
+    isReadOnly = false
 }: InterviewDetailsModalProps) => {
     if (!interview) return null;
 
@@ -188,6 +190,7 @@ const InterviewDetailsModal = ({
                                                         combineDateTime(e.target.value, current.time)
                                                     )
                                                 }
+                                                disabled={isReadOnly}
                                             />
                                         </div>
 
@@ -206,6 +209,7 @@ const InterviewDetailsModal = ({
                                                         combineDateTime(current.date, e.target.value)
                                                     )
                                                 }
+                                                disabled={isReadOnly}
                                             />
                                         </div>
 
@@ -227,6 +231,7 @@ const InterviewDetailsModal = ({
                                                             e.target.value
                                                         )
                                                     }
+                                                    disabled={isReadOnly}
                                                 />
                                                 {(round.meetingLink ||
                                                     roundEdits[round.id]?.meetingLink) && (
@@ -263,6 +268,7 @@ const InterviewDetailsModal = ({
                                                             e.target.value
                                                         )
                                                     }
+                                                    disabled={isReadOnly}
                                                 >
                                                     <MenuItem value="SCHEDULED">
                                                         Scheduled
@@ -395,11 +401,12 @@ const InterviewDetailsModal = ({
                                                                             e.target.value
                                                                         );
                                                                     }}
+                                                                    disabled={isReadOnly}
                                                                 />
                                                             </div>
 
                                                             <div className="col-span-1 flex justify-end">
-                                                                {!isJobSkill && (
+                                                                {!isJobSkill && !isReadOnly && (
                                                                     <IconButton
                                                                         size="small"
                                                                         color="error"
@@ -418,29 +425,33 @@ const InterviewDetailsModal = ({
                                         </div>
                                     </div>
 
-                                    <div className="flex justify-end pt-4">
-                                        <Button
-                                            disabled={!hasChanges(round.id)}
-                                            onClick={() => onSaveRound(round.id)}
-                                            variant="contained"
-                                        >
-                                            Save Changes
-                                        </Button>
-                                    </div>
+                                    {!isReadOnly && (
+                                        <div className="flex justify-end pt-4">
+                                            <Button
+                                                disabled={!hasChanges(round.id)}
+                                                onClick={() => onSaveRound(round.id)}
+                                                variant="contained"
+                                            >
+                                                Save Changes
+                                            </Button>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </FormSection>
                     );
                 })}
 
-                <div className="flex justify-end pt-4">
-                    <Button
-                        onClick={onOpenDecisionDialog}
-                        variant="contained"
-                    >
-                        Make Final Decision
-                    </Button>
-                </div>
+                {!isReadOnly && (
+                    <div className="flex justify-end pt-4">
+                        <Button
+                            onClick={onOpenDecisionDialog}
+                            variant="contained"
+                        >
+                            Make Final Decision
+                        </Button>
+                    </div>
+                )}
             </div>
         </CommonModal>
     );

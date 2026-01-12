@@ -11,10 +11,6 @@ import {
   DialogActions,
   IconButton,
   Typography,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
 } from '@mui/material';
 import {
   Edit,
@@ -37,10 +33,12 @@ import Input from '../../Components/ui/Input';
 import JobForm from './JobForm';
 import AutocompleteWoControl from '../../Components/ui/AutoCompleteWoControl';
 import type { EmployeeDTO } from '../../Types/user';
+import { usePermissions } from '../../Hooks/usePermissions';
 
 const JobDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const permissions = usePermissions();
 
   const [job, setJob] = useState<Job | null>(null);
   const [applicants, setApplicants] = useState<JobApplication[]>([]);
@@ -274,7 +272,7 @@ const JobDetails = () => {
 
   const handleYoeChange = (skillId: number, yoe: string) => {
     setAppSkills(prev => prev.map(item =>
-      item.skill.id === skillId ? { ...item, yearsOfExperience: yoe } : item
+      item.skill.id === skillId ? { ...item, yearsOfExperience: Number(yoe) || 0 } : item
     ));
   };
 
@@ -327,7 +325,7 @@ const JobDetails = () => {
         </div>
 
         <div className="flex gap-2">
-          {job.status === 'OPEN' && (
+          {permissions.can('application:review') && job.status === 'OPEN' && (
             <Button
               variant="contained"
               startIcon={<AutoFixHigh />}
@@ -338,7 +336,9 @@ const JobDetails = () => {
               {matching ? 'Matching...' : 'Auto-Match'}
             </Button>
           )}
-          <Button variant="outlined" startIcon={<Edit />} onClick={() => setIsEditing(true)}>Edit</Button>
+          {permissions.can('job:edit') && (
+            <Button variant="outlined" startIcon={<Edit />} onClick={() => setIsEditing(true)}>Edit</Button>
+          )}
         </div>
       </div>
 
@@ -458,28 +458,36 @@ const JobDetails = () => {
       </div>
 
       <Divider className="my-6" />
-      <div className="flex justify-end gap-3 mt-2">
-        <Button
-          variant="contained"
-          onClick={handleSaveReviewers}
-          disabled={savingReviewers}
-          sx={{ backgroundColor: 'black', '&:hover': { backgroundColor: '#333' } }}
-        >
-          {savingReviewers ? 'Saving...' : 'Save Changes'}
-        </Button>
-        {job.status === 'CLOSED' ? (
-          <Button variant="outlined" color="success" onClick={handleOpenJob}>
-            Open Job
-          </Button>
-        ) : (
-          <Button variant="outlined" color="warning" onClick={() => setCloseModalOpen(true)}>
-            Close Job
-          </Button>
-        )}
-        <Button variant="contained" color="error" onClick={() => setConfirmData({ open: true, action: 'delete' })}>
-          Delete Job
-        </Button>
-      </div>
+      {(permissions.can('application:assign_reviewers') || permissions.can('job:close') || permissions.can('job:delete')) && (
+        <div className="flex justify-end gap-3 mt-2">
+          {permissions.can('application:assign_reviewers') && (
+            <Button
+              variant="contained"
+              onClick={handleSaveReviewers}
+              disabled={savingReviewers}
+              sx={{ backgroundColor: 'black', '&:hover': { backgroundColor: '#333' } }}
+            >
+              {savingReviewers ? 'Saving...' : 'Save Changes'}
+            </Button>
+          )}
+          {permissions.can('job:close') && (
+            job.status === 'CLOSED' ? (
+              <Button variant="outlined" color="success" onClick={handleOpenJob}>
+                Open Job
+              </Button>
+            ) : (
+              <Button variant="outlined" color="warning" onClick={() => setCloseModalOpen(true)}>
+                Close Job
+              </Button>
+            )
+          )}
+          {permissions.can('job:delete') && (
+            <Button variant="contained" color="error" onClick={() => setConfirmData({ open: true, action: 'delete' })}>
+              Delete Job
+            </Button>
+          )}
+        </div>
+      )}
 
       <Dialog
         open={!!selectedApp}
@@ -537,17 +545,20 @@ const JobDetails = () => {
                   )}
                 </div>
 
-                <div>
-                  <Typography variant="subtitle2" className="font-bold text-gray-900 mb-2">
-                    Status
-                  </Typography>
-                  <AutocompleteWoControl
-                    id='status'
-                    value={selectedStatus}
-                    options={statusOptions}
-                    onChange={(_, value) => setSelectedStatus(value as ApplicationStatus)}
-                  />
-                </div>
+                {permissions.can('application:update_status') && (
+                  <div>
+                    <Typography variant="subtitle2" className="font-bold text-gray-900 mb-2">
+                      Status
+                    </Typography>
+                    <AutocompleteWoControl
+                      id='status'
+                      value={selectedStatus}
+                      options={statusOptions}
+                      onChange={(_, value) => setSelectedStatus(value as ApplicationStatus)}
+                      disabled={!permissions.can('application:update_status')}
+                    />
+                  </div>
+                )}
                 {selectedStatus === 'INTERVIEW_SCHEDULED' && (
                   <div className="mb-4 border-1 border-gray-200 p-3 rounded-lg">
                     <div className="flex items-center gap-3 mt-2">
@@ -568,17 +579,22 @@ const JobDetails = () => {
                   <div className="bg-gray-50 p-4 mb-2 rounded-xl border border-gray-200 text-sm text-gray-700 leading-relaxed min-h-[100px]">
                     {selectedApp.coverLetter || "No cover letter provided."}
                   </div>
-                  <Typography variant="subtitle2" className="font-bold text-gray-900 mb-2">
-                    Recruiter Comment
-                  </Typography>
-                  <Input
-                    multiline
-                    rows={3}
-                    placeholder="Add a comment or feedback about this application."
-                    value={recruiterComment}
-                    onChange={(e) => setRecruiterComment(e.target.value)}
-                    className="w-full"
-                  />
+                  {permissions.can('application:add_comment') && (
+                    <>
+                      <Typography variant="subtitle2" className="font-bold text-gray-900 mb-2">
+                        Recruiter Comment
+                      </Typography>
+                      <Input
+                        multiline
+                        rows={3}
+                        placeholder="Add a comment or feedback about this application."
+                        value={recruiterComment}
+                        onChange={(e) => setRecruiterComment(e.target.value)}
+                        className="w-full"
+                        disabled={!permissions.can('application:add_comment')}
+                      />
+                    </>
+                  )}
                 </div>
                 <Box className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                   <Typography variant="subtitle2" className="font-bold text-gray-900 mb-3">
@@ -621,14 +637,16 @@ const JobDetails = () => {
 
             <DialogActions className="p-4 border-t border-gray-100 bg-gray-50">
               <div className="flex gap-3 w-full justify-end">
-                <Button
-                  variant="contained"
-                  onClick={handleStatusUpdate}
-                  disabled={updatingStatus}
-                  sx={{ backgroundColor: 'black', '&:hover': { backgroundColor: '#333' } }}
-                >
-                  {updatingStatus ? 'Updating...' : 'Update Status'}
-                </Button>
+                {permissions.can('application:update_status') && (
+                  <Button
+                    variant="contained"
+                    onClick={handleStatusUpdate}
+                    disabled={updatingStatus}
+                    sx={{ backgroundColor: 'black', '&:hover': { backgroundColor: '#333' } }}
+                  >
+                    {updatingStatus ? 'Updating...' : 'Update Status'}
+                  </Button>
+                )}
               </div>
             </DialogActions>
           </>

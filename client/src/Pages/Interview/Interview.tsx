@@ -2,9 +2,6 @@ import { useEffect, useState } from 'react';
 import {
     CircularProgress,
     Chip,
-    Select,
-    MenuItem,
-    FormControl,
     Tooltip
 } from '@mui/material';
 import { toast } from 'sonner';
@@ -15,6 +12,7 @@ import api from '../../utils/api';
 import type { EmployeeDTO } from '../../Types/user';
 import InterviewDetailsModal from './InterviewDetailsModal';
 import AutocompleteWoControl from '../../Components/ui/AutoCompleteWoControl';
+import { usePermissions } from '../../Hooks/usePermissions';
 
 interface Skill {
     id: number;
@@ -51,6 +49,7 @@ interface Interview {
 }
 
 const Interviews = () => {
+    const permissions = usePermissions();
     const [interviews, setInterviews] = useState<Interview[]>([]);
     const [skills, setSkills] = useState<Skill[]>([]);
     const [loading, setLoading] = useState(true);
@@ -65,6 +64,8 @@ const Interviews = () => {
 
     const [availableInterviewers, setAvailableInterviewers] = useState<EmployeeDTO[]>([]);
     const [availableHRs, setAvailableHRs] = useState<EmployeeDTO[]>([]);
+    
+    const isReadOnly = !permissions.can('interview:edit');
 
     useEffect(() => {
         fetchInterviews();
@@ -83,7 +84,11 @@ const Interviews = () => {
     const fetchInterviews = async () => {
         try {
             setLoading(true);
-            const res = await api.get('/interviews/company');
+            // Check if user is INTERVIEWER - fetch only assigned interviews
+            const isInterviewer = permissions.is('INTERVIEWER');
+            const endpoint = isInterviewer ? '/interviews/assigned' : '/interviews/company';
+            
+            const res = await api.get(endpoint);
             setInterviews(res.data.data || []);
         } catch {
             toast.error('Failed to load interviews');
@@ -301,6 +306,7 @@ const Interviews = () => {
                 onUpdateFeedbackRow={updateFeedbackRow}
                 onOpenDecisionDialog={() => setShowDecisionDialog(true)}
                 getStatusColor={getStatusColor}
+                isReadOnly={isReadOnly}
             />
 
             <CommonModal

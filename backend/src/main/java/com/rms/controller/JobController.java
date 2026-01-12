@@ -5,12 +5,14 @@ import com.rms.dto.jobs.CreateJobDto;
 import com.rms.dto.jobs.JobDTO;
 import com.rms.dto.jobs.JobStatusDto;
 import com.rms.dto.jobs.UpdateJobDto;
+import com.rms.entity.UserEntity;
 import com.rms.service.JobService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -134,13 +136,33 @@ public class JobController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('RECRUITER')")
     public ResponseEntity<ApiResponse<List<JobDTO>>> getJobsByCompany() {
         try {
             List<JobDTO> jobs = jobService.getJobsByCompany();
             return ResponseEntity.ok(ApiResponse.<List<JobDTO>>builder()
                     .status(HttpStatus.OK.value())
                     .message("Company jobs fetched successfully")
+                    .data(jobs)
+                    .isError(false)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.<List<JobDTO>>builder()
+                    .status(HttpStatus.BAD_REQUEST.value())
+                    .message(e.getMessage())
+                    .data(null)
+                    .isError(true)
+                    .build());
+        }
+    }
+
+    @GetMapping("/assigned")
+    @PreAuthorize("hasRole('REVIEWER')")
+    public ResponseEntity<ApiResponse<List<JobDTO>>> getAssignedJobs(@AuthenticationPrincipal UserEntity user) {
+        try {
+            List<JobDTO> jobs = jobService.getJobsAssignedToReviewer(user.getEmail());
+            return ResponseEntity.ok(ApiResponse.<List<JobDTO>>builder()
+                    .status(HttpStatus.OK.value())
+                    .message("Assigned jobs fetched successfully")
                     .data(jobs)
                     .isError(false)
                     .build());

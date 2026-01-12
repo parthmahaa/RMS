@@ -3,17 +3,15 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FaUserCircle } from "react-icons/fa";
 import { toast } from "sonner";
 import {
-	Add,
 	DashboardOutlined,
 	Forum,
 	LogoutOutlined,
-	Upload,
 } from "@mui/icons-material";
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import WorkIcon from '@mui/icons-material/Work'
 import useAuthStore from "../../Store/authStore";
 import type { DashboardData } from "../../Types/types";
-import { JOB_EDIT_ROLES, JOB_VIEW_ROLES, ADD_USER_ROLES, INTERVIEW_VIEW_ROLES } from "../../Types/user";
+import { JOB_VIEW_ROLES, ADD_USER_ROLES, INTERVIEW_VIEW_ROLES } from "../../Types/user";
 
 interface SidebarProps {
 	dashboardData?: DashboardData;
@@ -42,7 +40,6 @@ export function Sidebar({ }: SidebarProps) {
 
 	const canViewJobs = JOB_VIEW_ROLES.some(role => roles.includes(role));
 	const canViewInterviews = INTERVIEW_VIEW_ROLES.some(role => roles.includes(role));
-	const canEditJobs = JOB_EDIT_ROLES.some(role => roles.includes(role));
 	const canManageUsers = ADD_USER_ROLES.some(role => roles.includes(role));
 	const isCandidate = roles.includes("CANDIDATE");
 	const isAdmin = roles.includes("ADMIN");
@@ -95,6 +92,15 @@ export function Sidebar({ }: SidebarProps) {
 
 		// Admin-only
 		if (isAdmin) {
+			items.push({
+				name: "Users",
+				icon: PersonAddAltIcon,
+				path: "/users",
+			});
+		}
+
+		// Viewer can see users (read-only)
+		if (roles.includes("VIEWER")) {
 			items.push({
 				name: "Users",
 				icon: PersonAddAltIcon,
