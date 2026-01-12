@@ -129,7 +129,6 @@ const CandidateDashboard = () => {
         </div>
       )}
 
-      {/* Application Modal */}
       {applyingJob && (
         <JobApplicationForm
           open={!!applyingJobId}

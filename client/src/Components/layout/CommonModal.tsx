@@ -46,7 +46,7 @@ const CommonModal: React.FunctionComponent<CommonModalProps> = ({
 	return (
 		<Dialog
 			open={openState}
-			onClose={(event, reason) => {
+			onClose={(_event, reason) => {
 				if (
 					(reason === "backdropClick" && !closeOnClickOutside) ||
 					(reason === "escapeKeyDown" && !closeOnEscape)

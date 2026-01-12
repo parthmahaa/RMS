@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
 	Add,
 	DashboardOutlined,
+	Forum,
 	LogoutOutlined,
 	Upload,
 } from "@mui/icons-material";
@@ -12,7 +13,7 @@ import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import WorkIcon from '@mui/icons-material/Work'
 import useAuthStore from "../../Store/authStore";
 import type { DashboardData } from "../../Types/types";
-import { JOB_EDIT_ROLES, JOB_VIEW_ROLES, ADD_USER_ROLES } from "../../Types/user";
+import { JOB_EDIT_ROLES, JOB_VIEW_ROLES, ADD_USER_ROLES, INTERVIEW_VIEW_ROLES } from "../../Types/user";
 
 interface SidebarProps {
 	dashboardData?: DashboardData;
@@ -40,6 +41,7 @@ export function Sidebar({ }: SidebarProps) {
 	const logout = useAuthStore((state: any) => state.logout);
 
 	const canViewJobs = JOB_VIEW_ROLES.some(role => roles.includes(role));
+	const canViewInterviews = INTERVIEW_VIEW_ROLES.some(role => roles.includes(role));
 	const canEditJobs = JOB_EDIT_ROLES.some(role => roles.includes(role));
 	const canManageUsers = ADD_USER_ROLES.some(role => roles.includes(role));
 	const isCandidate = roles.includes("CANDIDATE");
@@ -58,11 +60,28 @@ export function Sidebar({ }: SidebarProps) {
 			});
 		}
 
+
 		if (isCandidate) {
 			items.push({
 				name: "Applications",
 				icon: PersonAddAltIcon,
 				path: "/applications",
+			});
+		}
+		
+		if(canViewInterviews) {
+			items.push({
+				name: "Interviews",
+				icon : Forum,	
+				path: "/interviews",
+			});
+		}
+
+		if(roles.includes("HR")){
+			items.push({
+				name: "Interviews",
+				icon: Forum,
+				path: "/interviews",
 			});
 		}
 

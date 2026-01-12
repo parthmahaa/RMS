@@ -207,9 +207,6 @@ const ManageUsers = () => {
                   <TableRow key={emp.id} hover>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">
-                          {emp.name.charAt(0).toUpperCase()}
-                        </div>
                         <div>
                           <Typography variant="body2" className="font-medium text-gray-900">
                             {emp.name}

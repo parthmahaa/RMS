@@ -206,7 +206,7 @@ const Profile: React.FC = () => {
   };
 
   if (isLoading) {
-    return <Loader2 className="animate-spin w-8 h-8 mx-auto mt-20 text-orange-500" />;
+    return <Loader2 className="animate-spin w-8 h-8 mx-auto mt-20 text-black" />;
   }
 
   if (!profile || !formData) {

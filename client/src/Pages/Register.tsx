@@ -54,7 +54,7 @@ const RegisterForm = () => {
       const response = await api.post("/auth/register", formData);
       
       if (response.data && response.status === 200) {
-        toast.success(response.data.message || "Registration successful! Please check your email.");
+        toast.success("OTP sent to your email.");
         setShowOtpDialog(true);
       } else {
         toast.error(response.data.message || "Registration failed");

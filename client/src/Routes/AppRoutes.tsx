@@ -10,12 +10,15 @@ import Jobs from '../Pages/Jobs';
 import useAuthStore from '../Store/authStore';
 import CandidateDashboard from '../Pages/CandidateDashboard';
 import Applications from '../Pages/Applications';
-import Interview from '../Pages/Interview';
 import Users from '../Pages/Admin/Users';
 import CandidateJobDetails from '../Pages/Candidate/CandidateJobDetails';
 import JobDetails from '../Pages/Jobs/JobDetails';
 import ManageUsers from '../Pages/Recruiter/ManageUsers';
-import { JOB_VIEW_ROLES, ADD_USER_ROLES, JOB_EDIT_ROLES } from '../Types/user';
+import { JOB_VIEW_ROLES, ADD_USER_ROLES, JOB_EDIT_ROLES, INTERVIEW_VIEW_ROLES } from '../Types/user';
+import Interview from '../Pages/Interview/Interview';
+import CandidateInterview from '../Pages/Interview/CandidateInterview';
+import InterviewerDashboard from '../Pages/Interview/InterviewDashboard';
+import HRInterview from '../Pages/Interview/HRInterview';
 const AppRoutes: React.FC = () => {
     const isAuthenticated = useAuthStore((state: any) => state.isAuthenticated);
     const isLoading = useAuthStore((state: any) => state.isLoading);
@@ -100,7 +103,15 @@ const AppRoutes: React.FC = () => {
                     path="interviews"
                     element={
                         <ProtectedRoute>
-                            {roles.includes("RECRUITER") ? <Interview /> : <Navigate to="/dashboard" replace />}
+                            {roles.includes("CANDIDATE") ? (
+                                <CandidateInterview />
+                            ) : roles.includes("INTERVIEWER") ? (
+                                <InterviewerDashboard />
+                            ) : roles.includes("HR") ? (
+                                <HRInterview />
+                            ) : (
+                                <Interview /> 
+                            )}
                         </ProtectedRoute>
                     }
                 />

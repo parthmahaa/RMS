@@ -1,5 +1,7 @@
-package com.rms.entity;
+package com.rms.entity.interviews;
 
+import com.rms.entity.Skill;
+import com.rms.entity.UserEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

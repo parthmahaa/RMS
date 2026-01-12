@@ -1,6 +1,8 @@
 package com.rms.dto.jobs;
 
 import com.rms.dto.skills.SkillReqDTO;
+import com.rms.entity.UserEntity;
+import com.rms.entity.users.Reviewer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -22,6 +25,7 @@ public class JobDTO {
     private String status;
     private LocalDateTime postedAt;
     private Long yoer;
+    private Set<UserEntity> reviewers;
     private String closeComment;
     private String closeReason;
     private List<Long> selectedCandidateIds;

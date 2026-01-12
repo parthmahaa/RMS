@@ -456,6 +456,30 @@ public class RecruiterService {
         userRepository.delete(user);
     }
 
+    // ======================= FETCH HR =======================
+    public List<EmployeeDTO> getCompanyHRs(Long userId) {
+        Recruiter recruiter = recruiterRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Recruiter not found"));
+
+        if (recruiter.getCompany() == null) {
+            throw new IllegalArgumentException("No company associated with this recruiter.");
+        }
+
+        List<HR> hrs = hrRepo.findByCompanyId(recruiter.getCompany().getId());
+
+        return hrs.stream()
+                .map(hr -> EmployeeDTO.builder()
+                        .id(hr.getUser().getId())
+                        .name(hr.getUser().getName())
+                        .email(hr.getUser().getEmail())
+                        .role(RoleType.HR)
+                        .status(hr.getUser().getStatus())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+
+
     // ================== FETCH COMPANY REVIEWERS ==================
     public List<EmployeeDTO> getCompanyReviewers(Long userId) {
         Recruiter recruiter = recruiterRepository.findByUserId(userId)

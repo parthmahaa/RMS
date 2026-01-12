@@ -1,13 +1,9 @@
 package com.rms.controller;
 
 import com.rms.config.ApiResponse;
-import com.rms.dto.skills.ProposedSkillDto;
-import com.rms.dto.skills.ProposedSkillUpdateDto;
-import com.rms.dto.skills.SkillDto;
 import com.rms.dto.user.UpdateUserDTO;
 import com.rms.dto.user.UserDTO;
 import com.rms.service.AdminService;
-import com.rms.service.SkillService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

@@ -1,6 +1,7 @@
 package com.rms.dto.jobs;
 
-import com.rms.entity.Skill;
+import com.rms.dto.skills.ApplicationSkillDto;
+import com.rms.entity.users.Reviewer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,7 +22,7 @@ public class JobApplicationDto {
     private String coverLetter;
     private String resumeFilePath;
     private LocalDateTime appliedAt;
-    private List<Skill> candidateSkills;
+    private List<ApplicationSkillDto> skills;
     private String recruiterComment;
     private String status;
     private Long candidateExperience;  // YOE a candidate has

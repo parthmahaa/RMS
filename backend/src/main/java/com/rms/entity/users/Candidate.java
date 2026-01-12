@@ -48,6 +48,10 @@ public class Candidate{
     private String resumeFilePath;
     private String currentCompany;
 
+    private String aadharUrl;
+    private String marksheetUrl;
+    private String addressProofUrl;
+
     @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Applications> applications = new ArrayList<>();
 
@@ -57,12 +61,9 @@ public class Candidate{
     }
 
     public boolean isProfileComplete() {
-        return this.phone != null && !this.phone.isBlank() &&
-            this.summary!= null && !this.summary.isBlank() &&
+        return this.phone != null && !this.phone.isBlank()  &&
             this.collegeName!= null && !this.collegeName.isBlank() &&
-            this.totalExperience!= null &&
-            this.resumeFilePath!= null &&
-            this.currentCompany!= null;
+            this.totalExperience!= null && this.degree!=null && this.branch!=null && this.graduationYear!= null;
     }
 
     public void addSkill(UserSkills userSkill) {
@@ -75,3 +76,4 @@ public class Candidate{
         userSkill.setCandidate(null);
     }
 }
+

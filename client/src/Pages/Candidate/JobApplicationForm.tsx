@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Typography, Box } from '@mui/material';
+import { Typography, Box } from '@mui/material';
 import { toast } from 'sonner';
 import Button from '../../Components/ui/Button';
 import Input from '../../Components/ui/Input';
+import CommonModal from '../../Components/layout/CommonModal';
 import type { ApplicationFormProps, JobApplicationFormData } from '../../Types/jobTypes';
 import useCloudinaryUpload from '../../Hooks/useCloudinary';
 import useAuthStore from '../../Store/authStore';
@@ -95,17 +96,22 @@ const JobApplicationForm = ({ open, job, onClose }: ApplicationFormProps) => {
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      <DialogTitle>
+    <CommonModal
+      openState={open}
+      onClose={handleClose}
+      title={
         <Typography variant="h6" className="font-semibold">
           Apply for {job.position}
         </Typography>
-        <Typography variant="body2" color="text.secondary" className="mt-1">
+      }
+      title2={
+        <Typography variant="body2" color="text.secondary">
           {job.companyName} • {job.location}
         </Typography>
-      </DialogTitle>
-
-      <DialogContent>
+      }
+      sizes={["95%", "85%", "70%", "60%"]}
+    >
+      <Box className="space-y-4">
         <Box className="space-y-4 mt-2">
           <div>
             <Input
@@ -116,8 +122,7 @@ const JobApplicationForm = ({ open, job, onClose }: ApplicationFormProps) => {
               value={formData.coverLetter}
               onChange={(e) => setFormData({ ...formData, coverLetter: e.target.value })}
               error={!!errors.coverLetter}
-              helperText={errors.coverLetter || 'Explain why you are a good fit for this role (minimum 50 characters)'}
-              placeholder="Dear Hiring Manager,&#10;&#10;I am writing to express my interest in the position..."
+              helperText={errors.coverLetter}
               fullWidth
             />
           </div>
@@ -154,27 +159,25 @@ const JobApplicationForm = ({ open, job, onClose }: ApplicationFormProps) => {
                   Resume uploaded successfully
                 </Typography>
               )}
-              <Typography variant="caption" className="text-gray-500">
-                If different from your profile resume. Supported formats: PDF, DOC, DOCX
-              </Typography>
             </Box>
           </div>
         </Box>
-      </DialogContent>
-      <DialogActions className="p-4">
-        <Button id="cancel-application" variant="outlined" onClick={handleClose} disabled={loading}>
-          Cancel
-        </Button>
-        <Button
-          id="submit-application"
-          variant="contained"
-          onClick={handleSubmit}
-          disabled={loading}
-        >
-          {loading ? 'Submitting...' : 'Submit Application'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+
+        <Box className="flex justify-end gap-2 mt-6 pt-4 border-t border-gray-200">
+          <Button id="cancel-application" variant="outlined" onClick={handleClose} disabled={loading}>
+            Cancel
+          </Button>
+          <Button
+            id="submit-application"
+            variant="contained"
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? 'Submitting...' : 'Submit Application'}
+          </Button>
+        </Box>
+      </Box>
+    </CommonModal>
   );
 };
 

@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,17 +42,20 @@ public class Applications {
 
     private LocalDateTime appliedAt;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "tbl_application_skills",
-            joinColumns = @JoinColumn(name = "application_id"),
-            inverseJoinColumns = @JoinColumn(name = "skill_id")
-    )
-    private List<Skill> candidateSkills = new ArrayList<>();
-
     @Enumerated(EnumType.STRING)
     private ApplicationStatus status;
 
+    private LocalDate joiningDate;
+    private Boolean documentsVerified;
+
     @Column(length = 1000)
     private String recruiterComment;
+
+    @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ApplicationSkill> applicationSkills = new ArrayList<>();
+
+    public void addApplicationSkill(ApplicationSkill skill) {
+        applicationSkills.add(skill);
+        skill.setApplication(this);
+    }
 }

@@ -60,7 +60,7 @@ const AddCandidateForm = ({ onSuccess}: AddCandidateFormProps) => {
   const onSubmit = async (data: AddCandidateFormData) => {
     setLoading(true);
     try {
-      await api.post('/user/candidate', {
+      await api.post('/recruiter/candidate', {
         ...data,
         skills: data.skills.map(id => ({ skillId: id }))
       });
@@ -75,7 +75,6 @@ const AddCandidateForm = ({ onSuccess}: AddCandidateFormProps) => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 py-2">
-      {/* BASIC INFO */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Controller
           name="name"
@@ -111,7 +110,6 @@ const AddCandidateForm = ({ onSuccess}: AddCandidateFormProps) => {
         />
       </div>
 
-      {/* SKILLS */}
       <Controller
         name="skills"
         control={control}
@@ -133,7 +131,6 @@ const AddCandidateForm = ({ onSuccess}: AddCandidateFormProps) => {
         )}
       />
 
-      {/* EDUCATION */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Controller
           name="degree"
@@ -162,7 +159,6 @@ const AddCandidateForm = ({ onSuccess}: AddCandidateFormProps) => {
         />
       </div>
 
-      {/* PROFESSIONAL */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Controller
           name="currentCompany"
@@ -181,7 +177,6 @@ const AddCandidateForm = ({ onSuccess}: AddCandidateFormProps) => {
         />
       </div>
 
-      {/* ACTIONS */}
       <Box className="flex justify-end gap-3 pt-4">
         <Button type="button" variant="outlined" onClick={()=> reset()}>
           Clear

@@ -11,6 +11,10 @@ import {
   DialogActions,
   IconButton,
   Typography,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import {
   Edit,
@@ -20,24 +24,24 @@ import {
   AutoFixHigh,
   Person,
   OpenInNew,
+  Delete,
 } from '@mui/icons-material';
 import { toast } from 'sonner';
 import { useParams, useNavigate } from 'react-router-dom';
 import Button from '../../Components/ui/Button';
 import ConfirmDialog from '../../Components/ui/ConfirmDialog';
-import type { ApplicationStatus, Job, JobApplication, JobFormData, Skill } from '../../Types/jobTypes';
+import type { ApplicationStatus, Job, JobApplication, JobFormData, Skill, SkillWithYoe } from '../../Types/jobTypes';
 import { formatJobStatus, formatJobType, formatDate } from '../../utils/jobFormatters';
 import api from '../../utils/api';
 import Input from '../../Components/ui/Input';
-import JobForm from './JobForm'; 
+import JobForm from './JobForm';
 import AutocompleteWoControl from '../../Components/ui/AutoCompleteWoControl';
 import type { EmployeeDTO } from '../../Types/user';
-import { set } from 'react-hook-form';
 
 const JobDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  
+
   const [job, setJob] = useState<Job | null>(null);
   const [applicants, setApplicants] = useState<JobApplication[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,8 +49,6 @@ const JobDetails = () => {
   const [allReviewers, setAllReviewers] = useState<EmployeeDTO[]>([]);
   const [selectedReviewers, setSelectedReviewers] = useState<EmployeeDTO[]>([]);
   const [savingReviewers, setSavingReviewers] = useState(false);
-
-  // Edit Mode State
   const [isEditing, setIsEditing] = useState(false);
 
   const [confirmData, setConfirmData] = useState<{
@@ -62,7 +64,15 @@ const JobDetails = () => {
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const [allSkills, setAllSkills] = useState<Skill[]>([]);
-  const [selectedSkills, setSelectedSkills] = useState<Skill[]>([]);
+  const [appSkills, setAppSkills] = useState<SkillWithYoe[]>([]);
+  const [selectedStatus, setSelectedStatus] = useState<ApplicationStatus>('PENDING');
+
+  const statusOptions: ApplicationStatus[] = [
+    'PENDING', 'REVIEWED', 'ACCEPTED', 'REJECTED',
+    'TEST_SCHEDULED', 'INTERVIEW_SCHEDULED', 'HIRED'
+  ];
+
+  const [roundsCount, setRoundsCount] = useState<number>();
 
   useEffect(() => {
     if (id) {
@@ -76,20 +86,20 @@ const JobDetails = () => {
   useEffect(() => {
     if (selectedApp) {
       setRecruiterComment(selectedApp.recruiterComment || '');
-      if (selectedApp.candidateSkills && selectedApp.candidateSkills.length > 0 && allSkills.length > 0) {
-        const candidateSkillNames = selectedApp.candidateSkills.map((s: any) =>
-          typeof s === 'string' ? s : (s.name ?? '')
-        );
-        const matchedSkills = allSkills.filter(skill =>
-          candidateSkillNames.includes(skill.name)
-        );
-        setSelectedSkills(matchedSkills);
+      setSelectedStatus(selectedApp.status as ApplicationStatus);
+      if (selectedApp.skills && selectedApp.skills.length > 0) {
+        const mapped = selectedApp.skills.map((s: any) => ({
+          skill: { id: s.skillId, name: s.skillName },
+          yearsOfExperience: s.yearsOfExperience || 0
+        }));
+        setAppSkills(mapped);
       } else {
-        setSelectedSkills([]);
+        setAppSkills([]);
       }
     } else {
       setRecruiterComment('');
-      setSelectedSkills([]);
+      setAppSkills([]);
+      setSelectedStatus('PENDING');
     }
   }, [selectedApp, allSkills]);
 
@@ -105,7 +115,7 @@ const JobDetails = () => {
 
   const fetchReviewers = async () => {
     try {
-      const response = await api.get('/recruiter/reviewers'); 
+      const response = await api.get('/recruiter/reviewers');
       setAllReviewers(response.data.data || []);
     } catch (error) {
       console.error("Failed to load reviewers");
@@ -119,7 +129,7 @@ const JobDetails = () => {
       const jobData = response.data.data || null;
       setJob(response.data.data || null);
 
-      if(jobData && jobData.reviewers){
+      if (jobData && jobData.reviewers) {
         setSelectedReviewers(jobData.reviewers);
       }
     } catch (error: any) {
@@ -144,13 +154,12 @@ const JobDetails = () => {
       await api.put(`/jobs/${id}`, data);
       toast.success('Job updated successfully');
       setIsEditing(false);
-      fetchJobDetails(); // Refresh details
+      fetchJobDetails();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to update job');
     }
   };
 
-  // AUTO MATCH FOR RECRUITERS TO MAP CANDIDATES TO JOBS
   const handleAutoMatch = async () => {
     if (!job) return;
     setMatching(true);
@@ -171,7 +180,7 @@ const JobDetails = () => {
     setSavingReviewers(true);
     try {
       const reviewerIds = selectedReviewers.map(r => r.id);
-      await api.post(`/recruiter/jobs/${job.id}/assign-reviewers`, reviewerIds); 
+      await api.post(`/recruiter/jobs/${job.id}/assign-reviewers`, reviewerIds);
       toast.success('Reviewers assigned successfully');
       fetchJobDetails();
     } catch (error: any) {
@@ -181,29 +190,33 @@ const JobDetails = () => {
     }
   };
 
-  const handleStatusUpdate = async (status: ApplicationStatus) => {
+  const handleStatusUpdate = async () => {
     if (!selectedApp) return;
     setUpdatingStatus(true);
-    try {
-      const defaultRemarks = status === 'ACCEPTED' ? 'Candidate shortlisted for interview' : 'Not a good fit at this time';
 
-      const remark = recruiterComment.trim().length>0 ? recruiterComment : defaultRemarks;
+    try {
+      const remark = recruiterComment.trim().length > 0 ? recruiterComment : 'Status updated';
+
+      const skillsPayload = appSkills.map(s => ({
+        skillId: s.skill.id,
+        yearsOfExperience: Number(s.yearsOfExperience)
+      }));
 
       const payload = {
-        status: status,
+        status: selectedStatus,
         remarks: remark,
-        candidateSkills : selectedSkills.map(s => s.id)
-      }
-      await api.patch(`/application/${selectedApp.id}/status`, {
-        ...payload
-      });
+        skillsWithYoe: skillsPayload,
+        numberOfRounds: selectedStatus === "INTERVIEW_SCHEDULED" ? roundsCount : null
+      };
 
-      toast.success(`Application ${status.toLowerCase()} successfully`);
+      await api.patch(`/application/${selectedApp.id}/status`, payload);
+      toast.success(`Application status updated to ${selectedStatus}`);
 
       setApplicants(prev => prev.map(app =>
-        app.id === selectedApp.id ? { ...app, status: status, recruiterComment : remark , candidateSkills : selectedSkills} : app
+        app.id === selectedApp.id ? { ...app, status: selectedStatus, recruiterComment: remark } : app
       ));
       setSelectedApp(null);
+      fetchApplicants();
     } catch (error: any) {
       toast.error('Failed to update status');
     } finally {
@@ -235,11 +248,11 @@ const JobDetails = () => {
       setCloseModalOpen(false);
       fetchJobDetails();
     } catch (error: any) {
-        toast.error(error.response?.data?.message || 'Failed to close job');
+      toast.error(error.response?.data?.message || 'Failed to close job');
     } finally {
-        setClosing(false);
+      setClosing(false);
     }
-  }
+  };
 
   const handleOpenJob = async () => {
     try {
@@ -251,27 +264,45 @@ const JobDetails = () => {
     }
   };
 
+  const handleSkillChange = (_: any, newSkills: Skill[]) => {
+    const updatedAppSkills = newSkills.map(skill => {
+      const existing = appSkills.find(as => as.skill.id === skill.id);
+      return existing || { skill, yearsOfExperience: 0 };
+    });
+    setAppSkills(updatedAppSkills);
+  };
+
+  const handleYoeChange = (skillId: number, yoe: string) => {
+    setAppSkills(prev => prev.map(item =>
+      item.skill.id === skillId ? { ...item, yearsOfExperience: yoe } : item
+    ));
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
+      case 'DOCUMENTS_VERIFIED': return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'OFFER_SENT' : return 'bg-cyan-100 text-cyan-700 border-cyan-200';
       case 'ACCEPTED': return 'bg-green-100 text-green-700 border-green-200';
       case 'REJECTED': return 'bg-red-100 text-red-700 border-red-200';
-      case 'REVIEWED': return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'LINKED': return 'bg-purple-100 text-purple-700 border-purple-200';
+      case 'TEST_SCHEDULED': return 'bg-orange-100 text-orange-700 border-orange-200';
+      case 'ON_HOLD': return 'bg-gray-100 text-gray-700 border-gray-200';
+      case 'INTERVIEW_SCHEDULED': return 'bg-indigo-100 text-indigo-700 border-indigo-200';
+      case 'HIRED': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
       default: return 'bg-yellow-100 text-yellow-700 border-yellow-200';
     }
   };
-
 
   if (loading) return <Box className="flex justify-center items-center h-64"><CircularProgress /></Box>;
   if (!job) return <Box className="p-6 text-center">Job not found</Box>;
 
   if (isEditing) {
     return (
-      <JobForm 
-        jobId={job.id} 
-        initialData={job} 
-        onCancel={() => setIsEditing(false)} 
-        onSuccess={handleEditSuccess} 
+      <JobForm
+        jobId={job.id}
+        initialData={job}
+        onCancel={() => setIsEditing(false)}
+        onSuccess={handleEditSuccess}
       />
     );
   }
@@ -357,15 +388,15 @@ const JobDetails = () => {
           </div>
           <div className="bg-gray-50 border-t border-gray-200">
             <div className="flex items-center gap-2 mt-3 mb-2">
-                <h3 className="text-lg font-bold text-gray-900">Assign Reviewers</h3>
+              <h3 className="text-lg font-bold text-gray-900">Assign Reviewers</h3>
             </div>
-            
+
             <AutocompleteWoControl
-                multiple
-                options={allReviewers}
-                getOptionLabel={(option: EmployeeDTO) => `${option.name} (${option.email})`}
-                value={selectedReviewers}
-                onChange={(_: any, newValue: EmployeeDTO[]) => setSelectedReviewers(newValue)}
+              multiple
+              options={allReviewers}
+              getOptionLabel={(option: EmployeeDTO) => `${option.name} (${option.email})`}
+              value={selectedReviewers}
+              onChange={(_: any, newValue: EmployeeDTO[]) => setSelectedReviewers(newValue)}
             />
           </div>
 
@@ -410,7 +441,7 @@ const JobDetails = () => {
                         </div>
                       </div>
                       <div className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getStatusColor(app.status)}`}>
-                        {app.status}
+                        {app.status.replace('_', ' ')}
                       </div>
                     </div>
                   </div>
@@ -428,13 +459,13 @@ const JobDetails = () => {
 
       <Divider className="my-6" />
       <div className="flex justify-end gap-3 mt-2">
-        <Button 
-            variant="contained" 
-            onClick={handleSaveReviewers}
-            disabled={savingReviewers}
-            sx={{ backgroundColor: 'black', '&:hover': { backgroundColor: '#333' } }}
+        <Button
+          variant="contained"
+          onClick={handleSaveReviewers}
+          disabled={savingReviewers}
+          sx={{ backgroundColor: 'black', '&:hover': { backgroundColor: '#333' } }}
         >
-            {savingReviewers ? 'Saving...' : 'Save Changes'}
+          {savingReviewers ? 'Saving...' : 'Save Changes'}
         </Button>
         {job.status === 'CLOSED' ? (
           <Button variant="outlined" color="success" onClick={handleOpenJob}>
@@ -480,60 +511,63 @@ const JobDetails = () => {
 
             <DialogContent className="p-6">
               <div className="mt-4 space-y-6">
-                <div className={`p-4 rounded-lg border flex items-center gap-3 ${getStatusColor(selectedApp.status)}`}>
-                  <Typography className="font-semibold text-sm">
-                    Current Status: {selectedApp.status}
-                  </Typography>
+                <div className='flex gap-2 w-full items-stretch'>
+                  {selectedApp.resumeFilePath ? (
+                    <div className="flex-1 min-w-0 bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Description className="text-blue-600 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-blue-900 truncate">Candidate Resume</p>
+                          <p className="text-xs text-blue-700 truncate">Click to view the full document</p>
+                        </div>
+                      </div>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => window.open(selectedApp.resumeFilePath, '_blank')}
+                        startIcon={<OpenInNew />}
+                      >
+                        Open
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex-1 min-w-0 bg-gray-50 p-4 rounded-xl text-center text-gray-500 text-sm italic flex items-center justify-center">
+                      No resume uploaded
+                    </div>
+                  )}
                 </div>
 
-                {selectedApp.resumeFilePath ? (
-                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <Description className="text-blue-600" />
-                      <div>
-                        <p className="text-sm font-bold text-blue-900">Candidate Resume</p>
-                        <p className="text-xs text-blue-700">Click to view the full document</p>
-                      </div>
+                <div>
+                  <Typography variant="subtitle2" className="font-bold text-gray-900 mb-2">
+                    Status
+                  </Typography>
+                  <AutocompleteWoControl
+                    id='status'
+                    value={selectedStatus}
+                    options={statusOptions}
+                    onChange={(_, value) => setSelectedStatus(value as ApplicationStatus)}
+                  />
+                </div>
+                {selectedStatus === 'INTERVIEW_SCHEDULED' && (
+                  <div className="mb-4 border-1 border-gray-200 p-3 rounded-lg">
+                    <div className="flex items-center gap-3 mt-2">
+                      <Typography variant="body2">Number of Rounds:</Typography>
+                      <Input
+                        type="number"
+                        value={roundsCount}
+                        onChange={(e) => setRoundsCount(Number(e.target.value))}
+                        size="small"
+                      /> 
                     </div>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      onClick={() => window.open(selectedApp.resumeFilePath, '_blank')}
-                      startIcon={<OpenInNew />}
-                    >
-                      Open
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="bg-gray-50 p-4 rounded-xl text-center text-gray-500 text-sm italic">
-                    No resume uploaded
                   </div>
                 )}
-
                 <div>
                   <Typography variant="subtitle2" className="font-bold text-gray-900 mb-2">
                     Cover Letter
                   </Typography>
-                  <div className="bg-gray-50 p-4  mb-2 rounded-xl border border-gray-200 text-sm text-gray-700 leading-relaxed min-h-[100px]">
-                    {selectedApp.coverLetter || selectedApp.recruiterComment || "No additional information provided."}
+                  <div className="bg-gray-50 p-4 mb-2 rounded-xl border border-gray-200 text-sm text-gray-700 leading-relaxed min-h-[100px]">
+                    {selectedApp.coverLetter || "No cover letter provided."}
                   </div>
-
-                  <Box className="mb-4">
-                    <Typography variant="subtitle2" className="font-bold text-gray-900 mb-2">
-                      Canidate Skills
-                    </Typography>
-                    <AutocompleteWoControl
-                      multiple
-                      options={allSkills}
-                      getOptionLabel={(option: Skill) => option.name}
-                      value={selectedSkills}
-                      onChange={(_: any, newValue: Skill[]) => setSelectedSkills(newValue)}
-                    />
-                    <Typography variant="caption" className="text-gray-500 mt-1">
-                      These skills will be added to the candidate's profile upon update.
-                    </Typography>
-                  </Box>
-
                   <Typography variant="subtitle2" className="font-bold text-gray-900 mb-2">
                     Recruiter Comment
                   </Typography>
@@ -546,36 +580,54 @@ const JobDetails = () => {
                     className="w-full"
                   />
                 </div>
+                <Box className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                  <Typography variant="subtitle2" className="font-bold text-gray-900 mb-3">
+                    Candidate Skills
+                  </Typography>
+
+                  <AutocompleteWoControl
+                    multiple
+                    options={allSkills}
+                    getOptionLabel={(option: Skill) => option.name}
+                    value={appSkills.map(as => as.skill)}
+                    onChange={handleSkillChange}
+                  />
+
+                  <div className="mt-3 space-y-2 max-h-[200px] overflow-y-auto">
+                    {appSkills.length === 0 && <p className="text-xs text-gray-400 italic">No skills selected.</p>}
+
+                    {appSkills.map((item) => (
+                      <div key={item.skill.id} className="flex items-center gap-3 bg-white p-2 rounded border border-gray-100">
+                        <span className="text-sm font-medium text-gray-700 flex-1">{item.skill.name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500">Exp (Yrs):</span>
+                          <input
+                            type="number"
+                            min="0"
+                            className="w-16 p-1 text-sm border border-gray-300 rounded focus:border-black outline-none"
+                            value={item.yearsOfExperience}
+                            onChange={(e) => handleYoeChange(item.skill.id, e.target.value)}
+                          />
+                        </div>
+                        <IconButton size="small" color="error" onClick={() => handleSkillChange(null, appSkills.filter(s => s.skill.id !== item.skill.id).map(s => s.skill))}>
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </div>
+                    ))}
+                  </div>
+                </Box>
               </div>
             </DialogContent>
 
             <DialogActions className="p-4 border-t border-gray-100 bg-gray-50">
               <div className="flex gap-3 w-full justify-end">
-                <Button 
-                  variant="contained" 
-                  color="primary"
-                  onClick={() => handleStatusUpdate(selectedApp.status)}
-                  disabled={updatingStatus}
-                  className="mr-auto"
-                >
-                  Save
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="error"
-                  onClick={() => handleStatusUpdate('REJECTED')}
-                  disabled={updatingStatus || selectedApp.status === 'REJECTED'}
-                >
-                  Reject
-                </Button>
                 <Button
                   variant="contained"
-                  color="success"
-                  onClick={() => handleStatusUpdate('ACCEPTED')}
-                  disabled={updatingStatus || selectedApp.status === 'ACCEPTED'}
-                  className="bg-green-600 hover:bg-green-700 text-white"
+                  onClick={handleStatusUpdate}
+                  disabled={updatingStatus}
+                  sx={{ backgroundColor: 'black', '&:hover': { backgroundColor: '#333' } }}
                 >
-                  Shortlist
+                  {updatingStatus ? 'Updating...' : 'Update Status'}
                 </Button>
               </div>
             </DialogActions>

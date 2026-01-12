@@ -36,7 +36,7 @@ const AddUserForm = ({ onSuccess, onCancel }: AddUserFormProps) => {
     const onSubmit = async (data: AddUserFormData) => {
         setLoading(true);
         try {
-            await api.post('/user/add', data);
+            await api.post('/recruiter/add', data);
             toast.success('User invited successfully');
             onSuccess();
         } catch (error: any) {

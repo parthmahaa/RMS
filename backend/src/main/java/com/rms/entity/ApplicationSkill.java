@@ -12,16 +12,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @Data
-@Table(name = "tbl_job_skills_required")
+@Table(name = "tbl_application_skills")
 public class ApplicationSkill {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "job_id")
-    private Job job;
+    @ManyToOne(fetch= FetchType.LAZY)
+    @JoinColumn(name = "application_id", nullable = false)
+    private Applications application;
 
     @ManyToOne
     @JoinColumn(name = "skill_id")

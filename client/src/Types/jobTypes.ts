@@ -17,9 +17,14 @@ export interface JobApplication {
   coverLetter?: string;
   resumeFilePath?: string;
   companyName?: string;
-  candidateSkills: Skill[];
+  skills: SkillWithYoe[];
   location?: string;
   type?: string;
+}
+
+export interface SkillWithYoe{
+  skill : Skill,
+  yearsOfExperience : number
 }
 
 export interface Job {
@@ -117,5 +122,38 @@ export interface ApplicationFormProps {
   job: Job;
   onClose: () => void;
 }
+export type ApplicationStatus = 
+  | 'PENDING' 
+  | 'REVIEWED' 
+  | 'LINKED' 
+  | 'ACCEPTED' 
+  | 'REJECTED'
+  | 'TEST_SCHEDULED'
+  | 'INTERVIEW_SCHEDULED'
+  | 'HIRED';
 
-export type ApplicationStatus = 'ACCEPTED'|'REJECTED' | 'PENDING' | 'REVIEWED' | 'LINKED'| 'HIRED';
+export const formatApplicationStatus = (status: ApplicationStatus): string => {
+  return status.replace(/_/g, ' ');
+};
+
+// Helper function to get status color
+export const getApplicationStatusColor = (status: ApplicationStatus): string => {
+  switch (status) {
+    case 'HIRED':
+      return 'emerald';
+    case 'ACCEPTED':
+      return 'green';
+    case 'REJECTED':
+      return 'red';
+    case 'INTERVIEW_SCHEDULED':
+      return 'indigo';
+    case 'TEST_SCHEDULED':
+      return 'orange';
+    case 'REVIEWED':
+      return 'blue';
+    case 'LINKED':
+      return 'purple';
+    default:
+      return 'yellow';
+  }
+};

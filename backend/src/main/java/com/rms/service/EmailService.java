@@ -61,10 +61,18 @@ public class EmailService {
             case INTERVIEW_SCHEDULED ->
                     "Interview Scheduled: " + data.get("jobTitle");
 
+            case INTERVIEW_MEETING_INVITE ->
+                    "Meeting Invitation: " + data.get("roundType") + " - " + data.get("jobTitle");
+
+            case ONLINE_TEST_LINK ->
+                    "Online Test Invitation: " + data.get("jobTitle");
             case ADD_CANDIDATE ->
                 "Profile Created in RMS";
             case PROFILE_CREATED ->
                 "Profile Created";
+
+            case OFFER_LETTER ->
+                    "Offer Letter: Welcome to " + data.get("companyName");
 
             default -> "Notification from RMS";
         };
@@ -82,10 +90,14 @@ public class EmailService {
 
             case APPLICATION_STATUS_UPDATE -> """
                 
-                Your application for %s at %s has been %s .
+                The status of your application for %s at %s has been updated to: %s
                 
-                Please login to view more details.
-                """.formatted(data.get("jobTitle").toUpperCase(), data.get("company"),data.get("status").toUpperCase());
+                Please login to view more details or remarks.
+                """.formatted(
+                    data.get("jobTitle").toUpperCase(),
+                    data.get("company"),
+                    data.get("status").toUpperCase()
+            );
 
             case JOB_APPLICATION_ACCEPTED -> """
                 
@@ -104,8 +116,43 @@ public class EmailService {
             case INTERVIEW_SCHEDULED -> """
                 
                 Your interview for %s has been scheduled.
-
+                
+                Below is the meeting link for the interview.
                 """.formatted(data.get("jobTitle"));
+
+            case ONLINE_TEST_LINK -> """
+                Dear Candidate,
+                
+                You have been shortlisted for an Online Test for the %s position at %s.
+                
+                Access the RMS portal o get the test link.
+                
+                Please complete the test within 24 hours without fail and ensure a proper internet connection.
+                Good Luck!
+                """.formatted(
+                    data.get("jobTitle"),
+                    data.get("company")
+            );
+
+            case INTERVIEW_MEETING_INVITE -> """
+                Hello,
+                
+                A %s has been scheduled for the %s position at %s.
+                
+                Date & Time: %s
+                Meeting Link: %s
+                
+                Candidate: %s
+                
+                Please join using the link above at the scheduled time.
+                """.formatted(
+                    data.get("roundType"),
+                    data.get("jobTitle"),
+                    data.get("company"),
+                    data.get("time"),
+                    data.get("link"),
+                    data.get("candidateName")
+            );
 
             // WHEN CREATED BY RECRUITER FOR ROLES
             case PROFILE_CREATED -> """
@@ -119,6 +166,21 @@ public class EmailService {
                     
                     Kindly login to RMS to see more details.
                     """.formatted(data.get("name"),data.get("recruiterName"),data.get("company").toUpperCase());
+
+            case OFFER_LETTER -> """
+                    Dear %s,
+                    
+                    Congratulations! We are pleased to verify your documents and confirm your offer at %s.
+                    
+                    Your Joining Date is: %s
+                    
+                    We look forward to having you on board!
+                    """.formatted(
+                    data.get("candidateName"),
+                    data.get("companyName"),
+                    data.get("joiningDate")
+            );
+
             default -> "You have a new notification from RMS. Please login to check.";
         };
     }

@@ -186,7 +186,6 @@ public class JobService {
             throw new RuntimeException("You must update your company profile to view jobs.");
         }
         Long companyId = recruiter.getCompany().getId();
-        System.out.println(companyId);
 
         return jobRepository.findJobsByCompany(companyId).stream()
                 .map(this::mapToDto)
@@ -254,6 +253,7 @@ public class JobService {
         dto.setType(job.getType() != null ? job.getType() : null);
         dto.setStatus(job.getStatus() != null ? job.getStatus().toString() : null);
         dto.setYoer(job.getYoer() != null ? job.getYoer() : 0);
+        dto.setReviewers(job.getReviewers());
         if (job.getRequiredSkills() != null) {
             dto.setRequiredSkills(job.getRequiredSkills().stream()
                     .map(skill -> mapSkillToReqDto(skill, true))

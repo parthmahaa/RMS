@@ -7,5 +7,8 @@ public enum EmailType {
     JOB_MATCHED,
     APPLICATION_STATUS_UPDATE,
     PROFILE_CREATED,
-    ADD_CANDIDATE
+    ADD_CANDIDATE,
+    OFFER_LETTER,
+    INTERVIEW_MEETING_INVITE, // Specific meeting invite with link
+    ONLINE_TEST_LINK
 }

@@ -1,5 +1,9 @@
-package com.rms.entity;
+package com.rms.entity.interviews;
 
+import com.rms.entity.Applications;
+import com.rms.entity.Company;
+import com.rms.entity.Job;
+import com.rms.entity.UserEntity;
 import com.rms.entity.users.Candidate;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -53,6 +57,10 @@ public class Interview {
 
     @OneToMany(mappedBy = "interview", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<InterviewRound> rounds = new ArrayList<>();
+
+    private String aadharUrl;
+    private String marksheetUrl;
+    private String addressProofUrl;
 
     private String finalComments;
 }
