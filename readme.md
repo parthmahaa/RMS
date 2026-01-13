@@ -224,5 +224,5 @@ PUT    /api/user/profile       - Update user profile(Recruiter,Candidate)
 - Automated scoring mechanism
 - Create candidate from CV parsing
 - Notification channel for web notifications
-- Dashboard desing
+- Dashboard design
 
